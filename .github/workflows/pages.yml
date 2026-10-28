@@ -23,6 +23,7 @@ jobs:
           mkdir _site
           unzip -q site.zip -d _site
           if [ -d overrides ]; then cp -r overrides/. _site/; fi
+          grep -rl "begced.officiel@gmail.com" _site --include=*.html --include=*.js | xargs -r sed -i "s/begced\.officiel@gmail\.com/info@begced.com/g"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
