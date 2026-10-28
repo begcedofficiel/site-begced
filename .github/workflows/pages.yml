@@ -22,6 +22,7 @@ jobs:
         run: |
           mkdir _site
           unzip -q site.zip -d _site
+          if [ -d overrides ]; then cp -r overrides/. _site/; fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
