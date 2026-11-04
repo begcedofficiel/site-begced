@@ -69,20 +69,21 @@
     var actives = {};
 
     var Panneau = L.Control.extend({
-      options: { position: "topright" },
+      options: { position: "bottomleft" },
       onAdd: function () {
         var div = L.DomUtil.create("div", "ur-direct");
         div.style.cssText = "background:#fff;color:#0A2A66;padding:8px 10px;border-radius:8px;" +
           "box-shadow:0 1px 6px rgba(0,0,0,.3);font:13px/1.45 system-ui,sans-serif;max-width:230px";
         div.innerHTML =
-          "<strong>Météo en direct</strong>" +
+          "<details" + (window.innerWidth > 700 ? " open" : "") + "><summary style='cursor:pointer;font-weight:700'>Météo en direct</summary>" +
           "<label style='display:block'><input type='checkbox' data-c='nuages'> Nuages (Meteosat, 15 min)</label>" +
           "<label style='display:block'><input type='checkbox' data-c='orages'> Orages qui se forment</label>" +
           "<label style='display:block'><input type='checkbox' data-c='pluie'> Pluie tombée (NASA, 30 min)</label>" +
           "<small class='ur-maj' style='display:block;opacity:.75'>Images actualisées toutes les " + RAFRAICHIR_MIN + " min</small>" +
+          "<label style='display:block'><input type='checkbox' data-sig checked> Inondations signalées</label>" +
           "<a class='ur-signal' href='" + lienSignalement() + "' target='_blank' rel='noopener' " +
           "style='display:block;margin-top:6px;background:#25D366;color:#fff;text-align:center;padding:5px;border-radius:6px;text-decoration:none;font-weight:600'>" +
-          "Signaler une inondation</a>";
+          "Signaler une inondation</a></details>";
         L.DomEvent.disableClickPropagation(div);
         div.querySelectorAll("input[data-c]").forEach(function (box) {
           box.addEventListener("change", function () {
@@ -91,8 +92,16 @@
             else { carte.removeLayer(c[nom]); delete actives[nom]; }
           });
         });
+        var sig = div.querySelector("input[data-sig]");
+        sig.addEventListener("change", function () {
+          var c2 = window.UrbanRiskSignalements && window.UrbanRiskSignalements.couche();
+          if (!c2) return;
+          if (sig.checked) c2.addTo(carte); else carte.removeLayer(c2);
+        });
         var lien = div.querySelector(".ur-signal");
         lien.addEventListener("click", function (e) {
+          // Formulaire avec photo sur la carte ; WhatsApp reste la solution de secours
+          if (window.UrbanRiskSignalements) { e.preventDefault(); window.UrbanRiskSignalements.ouvrir(); return; }
           if (!navigator.geolocation) return;
           e.preventDefault();
           navigator.geolocation.getCurrentPosition(

@@ -192,6 +192,7 @@ footer{padding:18px 0 28px;font-size:13px;color:var(--muted);border-top:1px soli
         <div class="lg"><span class="sw" style="background:#ffe45c"></span>Bassin en vigilance jaune</div>
         <div class="lg"><span class="sw" style="background:#f5a03a"></span>Bassin en vigilance orange</div>
         <div class="lg"><span class="sw" style="background:#e5483b"></span>Bassin en vigilance rouge</div>
+        <div class="lg"><span class="sw" style="background:#1565c0;border-radius:50%"></span>Inondation signalée par un habitant (pâle : en attente de vérification)</div>
         <p class="note">Niveaux expérimentaux, non officiels. Touchez la carte pour la fiche d'un lieu.</p>
       </div>
     </details>
@@ -590,7 +591,7 @@ getJSON("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/Ma
   if (/^\d{8}$/.test(d)) $("#esri-meta").textContent = "Esri · " + (a.SOURCE || "Vantor") + " · " + d.slice(6, 8) + "/" + d.slice(4, 6) + "/" + d.slice(0, 4) + " · " + String(a["RESOLUTION (M)"] || "0.5").replace(".", ",") + " m";
 }).catch(function () {});
 
-map.on("click", function (e) { $("#results").hidden = true; openPlace(e.latlng.lat, e.latlng.lng); });
+map.on("click", function (e) { if (window.UrbanRiskSignalements && window.UrbanRiskSignalements.choixEnCours()) return; $("#results").hidden = true; openPlace(e.latlng.lat, e.latlng.lng); });
 
 /* ---------- Recherche ---------- */
 var VIEWBOX = "15.1298,-4.3398,15.4084,-4.6489";
@@ -692,5 +693,6 @@ Promise.all(B.map(function (b) { var c = centre(b.ring); return rainAt(c[0], c[1
 })();
 </script>
 <script src="assets/js/urbanrisk-direct.js"></script>
+<script src="assets/js/urbanrisk-signalements.js"></script>
 </body>
 </html>
