@@ -105,6 +105,11 @@ ul { padding-left: 1.2em; }
 .open .menu-open { display: none; }
 .open .menu-close { display: inline; }
 
+@media (min-width: 1341px) and (max-width: 1600px) {
+  .main-nav { gap: 12px; }
+  .main-nav ul a { padding: 8px 7px; font-size: .9rem; }
+  .nav-cta { padding-left: 16px; padding-right: 16px; }
+}
 @media (max-width: 1340px) {
   .menu-toggle { display: inline-flex; }
   .main-nav { position: absolute; left: 0; right: 0; top: var(--header-h); flex-direction: column; align-items: stretch; gap: 16px; padding: 16px 24px 24px; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 18px 30px rgba(10, 42, 102, .12); display: none; max-height: calc(100vh - var(--header-h)); overflow-y: auto; }
