@@ -264,7 +264,7 @@ footer{padding:18px 0 28px;font-size:13px;color:var(--muted);border-top:1px soli
 var $ = function (s) { return document.querySelector(s); };
 var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); };
 var nf = function (x, d) { return Number(x).toLocaleString("fr-FR", {maximumFractionDigits: d || 0, minimumFractionDigits: d || 0}); };
-function toast(t) { var e = $("#toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { e.hidden = true; }, 2800); }
+function toast(t) { var e = $("#toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { e.hidden = true; }, Math.max(2800, t.length * 60)); }
 var NA = '<span class="na">Donnée indisponible</span>';
 
 /* ---------- Données géographiques ---------- */
@@ -313,8 +313,14 @@ function pourquoi(b, P, v, niv) {
 }
 
 /* ---------- Carte ---------- */
-var map = L.map("map", {zoomControl: false, minZoom: 10, maxZoom: 20, preferCanvas: false});
+var map = L.map("map", {zoomControl: false, minZoom: 10, maxZoom: 19, preferCanvas: false}); // 19 = finesse réelle des images (≈ 50 cm) : au-delà, la photo est seulement agrandie et devient floue
 window.urMap = map; // utilisé par la couche « Météo en direct »
+map.on("zoomend", function () {
+  if (map.getZoom() >= 19 && !map._urAvisZoom) {
+    map._urAvisZoom = true;
+    toast("Zoom maximal : environ 50 cm par pixel. Cette photo satellite a été prise un jour sans inondation ; pour voir l'eau, activez « Pluie tombée » ou le suivi radar.");
+  }
+});
 var esriAttr = 'Imagerie © <a href="https://www.esri.com/">Esri</a>, Vantor, Earthstar Geographics';
 var bases = {
   esri: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom: 19, maxZoom: 20, attribution: esriAttr}),
