@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UrbanRisk Mont-Ngafula – carte satellite et pluie prévue | BEGCED</title>
+<meta name="description" content="Carte satellite réelle et zoomable de la commune de Mont-Ngafula (Kinshasa) : retrouvez votre quartier, votre avenue et votre maison, et consultez la pluie prévue sur 72 heures. Service public et gratuit de BEGCED.">
+<meta name="theme-color" content="#0A2A66">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/logo/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/img/logo/favicon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --bg:#F4F7FB; --surface:#FFFFFF; --surface-2:#EEF3FA; --line:#D7DFEA;
+  --ink:#0E1B33; --muted:#55627A; --navy:#0A2A66; --accent:#1F5BC4; --accent-soft:#E3ECFB; --on-accent:#FFFFFF;
+  --green:#2E7D22; --green-soft:#E6F4E1; --amber:#9A5B00; --amber-soft:#FFF1D9; --red:#B3261E; --red-soft:#FDE7E5;
+  --shadow:0 6px 24px rgba(10,42,102,.18);
+  --f-head:"Manrope","Segoe UI",system-ui,sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1220; --surface:#121B2E; --surface-2:#18233A; --line:#2A3752; --ink:#E8EEF8; --muted:#A5B1C6; --navy:#9DBBF2; --accent:#7EA8F0; --accent-soft:#1C2C4C; --on-accent:#0B1220;
+  --green:#7CCB6A; --green-soft:#17301A; --amber:#F2B45A; --amber-soft:#3A2A10; --red:#F28B82; --red-soft:#3D1A18; --shadow:0 6px 24px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1220; --surface:#121B2E; --surface-2:#18233A; --line:#2A3752; --ink:#E8EEF8; --muted:#A5B1C6; --navy:#9DBBF2; --accent:#7EA8F0; --accent-soft:#1C2C4C; --on-accent:#0B1220;
+  --green:#7CCB6A; --green-soft:#17301A; --amber:#F2B45A; --amber-soft:#3A2A10; --red:#F28B82; --red-soft:#3D1A18; --shadow:0 6px 24px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance}
+button,input{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* En-tête */
+.top{display:flex;align-items:center;gap:12px;padding-block:12px}
+.top img{width:40px;height:40px;border-radius:8px;flex:none}
+.top h1{font-size:20px;color:var(--navy);line-height:1.2}
+.top p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+.top .back{margin-left:auto;font-size:14px;white-space:nowrap}
+
+/* Barre d'outils */
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-bottom:10px}
+.search{flex:1 1 320px;display:flex;min-width:0;position:relative}
+.search input{flex:1;min-width:0;height:44px;padding:0 12px;border:1px solid var(--line);border-right:0;border-radius:10px 0 0 10px;background:var(--surface)}
+.search button{height:44px;padding:0 16px;border:0;border-radius:0 10px 10px 0;background:var(--accent);color:var(--on-accent);font-weight:700;cursor:pointer}
+.btn{height:44px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.results{position:absolute;top:48px;left:0;right:0;z-index:1200;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);max-height:320px;overflow:auto;padding:4px}
+.results button{display:block;width:100%;text-align:left;padding:9px 10px;border:0;background:none;border-radius:8px;cursor:pointer}
+.results button:hover,.results button:focus-visible{background:var(--accent-soft)}
+.results small{display:block;color:var(--muted)}
+.results p{margin:8px 10px;color:var(--muted);font-size:14px}
+
+/* Carte */
+.mapbox{position:relative;height:min(78vh,820px);min-height:440px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#1b2433}
+#map{position:absolute;inset:0}
+.leaflet-container{font-family:var(--f-body)}
+.leaflet-control-attribution{font-size:11px}
+
+/* Panneau des couches */
+.layers{position:absolute;top:10px;right:10px;z-index:1000;width:250px;background:var(--surface);border-radius:12px;box-shadow:var(--shadow);font-size:14px}
+.layers summary{list-style:none;cursor:pointer;padding:10px 12px;font-weight:700;font-family:var(--f-head);display:flex;justify-content:space-between;align-items:center}
+.layers summary::-webkit-details-marker{display:none}
+.layers summary::after{content:"▾";color:var(--muted)}
+.layers[open] summary::after{content:"▴"}
+.layers .in{padding:0 12px 12px;max-height:calc(min(78vh,820px) - 70px);overflow:auto}
+.layers h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:8px 0 4px}
+.layers label{display:flex;gap:8px;align-items:flex-start;padding:4px 0;cursor:pointer;line-height:1.3}
+.layers label small{display:block;color:var(--muted);font-size:12px}
+.layers input{margin-top:2px;accent-color:var(--accent)}
+.lg{display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0}
+.sw{width:18px;height:12px;border-radius:3px;flex:none;border:1.5px solid #0A2A66}
+
+/* Fiche d'information */
+.card{position:absolute;z-index:1100;left:10px;top:10px;width:360px;max-height:calc(100% - 20px);overflow:auto;background:var(--surface);border-radius:12px;box-shadow:var(--shadow);padding:14px 14px 12px}
+.card[hidden]{display:none}
+.card .x{position:absolute;top:6px;right:6px;width:36px;height:36px;border:0;border-radius:8px;background:none;font-size:22px;cursor:pointer;color:var(--muted)}
+.card h2{font-size:17px;padding-right:36px}
+.card .sub{margin:2px 0 8px;color:var(--muted);font-size:14px}
+.card h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:12px 0 4px}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:14px}
+.card dt{color:var(--muted)}
+.card dd{margin:0;font-variant-numeric:tabular-nums}
+.card .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.card .acts .btn{height:36px;font-size:13.5px;padding:0 10px;text-decoration:none;color:inherit}
+.rain{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.rain th,.rain td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
+.rain th:first-child,.rain td:first-child{text-align:left}
+.rain th{font-weight:600;color:var(--muted);font-size:12.5px}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.na{color:var(--muted);font-style:italic}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:13px;font-weight:700}
+.v0{background:var(--surface-2);color:var(--muted)} .v1{background:#FFF6C2;color:#6B5800} .v2{background:var(--amber-soft);color:var(--amber)} .v3{background:var(--red-soft);color:var(--red)}
+.load{color:var(--muted);font-size:14px}
+
+/* Indicateurs et bassins */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:14px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-family:var(--f-head);font-size:22px;color:var(--navy);font-variant-numeric:tabular-nums}
+.kpi span{font-size:13.5px;color:var(--muted)}
+.basins{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.basin{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.basin header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.basin h3{font-size:16px}
+.basin dl{display:grid;grid-template-columns:1fr auto;gap:3px 10px;margin:0;font-size:14px}
+.basin dt{color:var(--muted)} .basin dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.basin button{margin-top:8px}
+section.info{padding-block:18px}
+section.info h2{font-size:19px;color:var(--navy);margin-bottom:4px}
+section.info p{margin:6px 0;max-width:80ch}
+details.more{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:10px}
+details.more summary{cursor:pointer;font-weight:700}
+details.more li,details.more p{font-size:14.5px;max-width:90ch}
+footer{padding:18px 0 28px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);margin-top:18px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:3000;background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;font-size:14px;max-width:calc(100vw - 32px)}
+
+@media (max-width:760px){
+  .top h1{font-size:17px} .top p{display:none} .top img{width:34px;height:34px}
+  .mapbox{height:72vh;min-height:420px;border-radius:12px;margin-inline:-6px}
+  .layers{width:auto;max-width:calc(100% - 20px)}
+  .layers:not([open]){width:auto}
+  .card{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:52%}
+  .bar .btn span{display:none}
+}
+
+.gee{position:relative;height:min(82vh,760px);min-height:520px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface-2);margin-top:10px}
+.gee iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pts{margin:6px 0;padding-left:20px;max-width:90ch} .pts li{margin:3px 0}
+/* Avant / après */
+.cmp-sel{display:grid;gap:6px;margin:4px 0 6px}
+.sel{display:grid!important;grid-template-columns:52px 1fr;align-items:center;gap:6px!important;font-weight:600}
+.sel select{min-width:0;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:inherit;font-size:13px;color:inherit;padding:0 4px}
+.swipe{position:absolute;inset:0;z-index:900;pointer-events:none}
+.swipe[hidden]{display:none}
+.bar-v{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.35);pointer-events:auto;cursor:ew-resize;touch-action:none}
+.knob{position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid #fff;background:var(--navy);color:#fff;font-size:20px;font-weight:800;cursor:ew-resize;box-shadow:0 2px 10px rgba(0,0,0,.4);touch-action:none}
+.tag{position:absolute;top:12px;padding:4px 10px;border-radius:8px;background:rgba(10,18,32,.82);color:#fff;font-size:13px;font-weight:700;max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:760px){.tag{top:60px;font-size:12px}}
+@media print{.bar,.layers,.toast{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <img src="assets/img/logo/logo-embleme-160.jpg" alt="BEGCED">
+    <div>
+      <h1>UrbanRisk Mont-Ngafula</h1>
+      <p>Carte satellite réelle, suivi des inondations et de l'érosion, pluie prévue sur 72 h · service public et gratuit de BEGCED</p>
+    </div>
+    <a class="back" href="/projets">← Projets BEGCED</a>
+  </header>
+
+  <div id="ur-alerte"></div>
+
+  <div class="bar">
+    <form class="search" id="f-search" role="search" autocomplete="off">
+      <input id="q" type="search" placeholder="Quartier, avenue, école, église… ou coordonnées (-4.47, 15.27)" aria-label="Rechercher un lieu à Mont-Ngafula">
+      <button type="submit">Chercher</button>
+      <div class="results" id="results" hidden></div>
+    </form>
+    <button class="btn" type="button" id="b-locate" title="Me localiser">📍 <span>Ma position</span></button>
+    <button class="btn" type="button" id="b-home" title="Revoir toute la commune">⤢ <span>Toute la commune</span></button>
+  </div>
+
+  <div class="mapbox">
+    <div id="map" role="application" aria-label="Carte satellite de Mont-Ngafula"></div>
+
+    <details class="layers" id="layers" open>
+      <summary>Couches</summary>
+      <div class="in">
+        <h3>Fond de carte</h3>
+        <label><input type="radio" name="base" value="esri" checked><span>Satellite haute résolution<small id="esri-meta">Esri · Vantor (WorldView) · ≈ 0,5 m</small></span></label>
+        <label><input type="radio" name="base" value="osm"><span>Plan des rues<small>OpenStreetMap</small></span></label>
+        <label><input type="radio" name="base" value="s2024"><span>Sentinel-2, 2024<small>Composite sans nuages · 10 m</small></span></label>
+        <label><input type="radio" name="base" value="s2020"><span>Sentinel-2, 2020<small>Pour comparer l'évolution · 10 m</small></span></label>
+        <h3>Avant / après</h3>
+        <label><input type="checkbox" id="o-cmp"><span>Comparer deux dates<small>Un curseur glisse entre l'image « avant » (à gauche) et « après » (à droite)</small></span></label>
+        <div class="cmp-sel" id="cmp-sel" hidden>
+          <label class="sel">Avant <select id="cmp-a"></select></label>
+          <label class="sel">Après <select id="cmp-b"></select></label>
+        </div>
+        <h3>Afficher</h3>
+        <label><input type="checkbox" id="o-labels" checked><span>Routes et noms de lieux</span></label>
+        <label><input type="checkbox" id="o-commune" checked><span>Limite de la commune</span></label>
+        <label><input type="checkbox" id="o-basins" checked><span>Bassins pilotes et vigilance</span></label>
+        <h3>Légende</h3>
+        <div class="lg"><span class="sw" style="border-color:#FFD43B;background:transparent"></span>Limite de Mont-Ngafula</div>
+        <div class="lg"><span class="sw" style="background:#ffe45c"></span>Bassin en vigilance jaune</div>
+        <div class="lg"><span class="sw" style="background:#f5a03a"></span>Bassin en vigilance orange</div>
+        <div class="lg"><span class="sw" style="background:#e5483b"></span>Bassin en vigilance rouge</div>
+        <p class="note">Niveaux expérimentaux, non officiels. Touchez la carte pour la fiche d'un lieu.</p>
+      </div>
+    </details>
+
+    <div class="swipe" id="swipe" hidden>
+      <span class="tag l" id="tag-a">Avant</span><span class="tag r" id="tag-b">Après</span>
+      <div class="bar-v" id="bar-v"><button type="button" class="knob" id="knob" aria-label="Déplacer le curseur avant / après">⇔</button></div>
+    </div>
+    <article class="card" id="card" hidden aria-live="polite">
+      <button class="x" type="button" id="card-x" aria-label="Fermer la fiche">×</button>
+      <div id="card-body"></div>
+    </article>
+  </div>
+
+  <section class="info" id="suivi" aria-labelledby="h-suivi">
+    <h2 id="h-suivi">Suivi satellite : inondations et érosion</h2>
+    <p>Ce module, calculé par Google Earth Engine, analyse automatiquement <b>la dernière image satellite disponible</b> sur toute la commune à chaque ouverture :</p>
+    <ul class="pts">
+      <li><b>Inondation</b> – radar Sentinel-1, qui voit à travers les nuages et la nuit : les zones devenues anormalement couvertes d'eau par rapport à la saison sèche (nouvelle image tous les 6 à 12 jours environ).</li>
+      <li><b>Érosion et ravines</b> – Sentinel-2 optique : la végétation disparue et le sol mis à nu sur les pentes de plus de 8° au cours de la dernière année.</li>
+      <li><b>Vérification de terrain</b> – le bouton « Zones à vérifier sur le terrain » donne la liste des zones détectées avec leurs coordonnées GPS, téléchargeable en CSV pour KoboCollect.</li>
+    </ul>
+    <div class="gee">
+      <iframe src="https://moonlit-poetry-457514-m8.projects.earthengine.app/view/urbanrisk-montngafula" title="UrbanRisk Mont-Ngafula – suivi satellite des inondations et de l'érosion (Google Earth Engine)" loading="lazy" allow="geolocation; fullscreen"></iframe>
+    </div>
+    <p class="note"><a href="https://moonlit-poetry-457514-m8.projects.earthengine.app/view/urbanrisk-montngafula" target="_blank" rel="noopener">Ouvrir le suivi satellite en plein écran</a> (recommandé sur téléphone). Le calcul prend 10 à 30 secondes. Détection automatique, à confirmer sur le terrain : ce n'est pas une alerte officielle. Les satellites ne passent pas en continu : la date de l'image utilisée est toujours affichée.</p>
+  </section>
+
+  <section class="info" aria-labelledby="h-prev">
+    <h2 id="h-prev">Pluie prévue et vigilance dans les 3 bassins pilotes</h2>
+    <p id="maj" class="note">Lecture de la prévision en cours…</p>
+    <div class="kpis" id="kpis"></div>
+    <div class="basins" id="basins"></div>
+    <h3 style="margin-top:18px">Risque d'orage jour par jour (toute la commune)</h3>
+    <div id="ur-previsions"><p class="note">Lecture des prévisions d'ensemble…</p></div>
+
+    <details class="more">
+      <summary>Comment lire cette carte</summary>
+      <ul>
+        <li><b>Retrouver sa maison :</b> zoomez sur la commune, cherchez un quartier ou un lieu connu, ou touchez « Ma position ». L'image haute résolution permet de distinguer les toits, les rues et les parcelles.</li>
+        <li><b>Toucher la carte</b> ouvre la fiche du lieu : nom de l'avenue et du quartier quand OpenStreetMap les connaît, coordonnées GPS, date de l'image, pluie prévue à cet endroit et, dans les bassins pilotes, le niveau de vigilance.</li>
+        <li><b>Voir avant et après :</b> dans « Couches », cochez « Comparer deux dates », choisissez l'image « avant » et l'image « après », puis faites glisser le curseur blanc. Les images haute résolution (2010, 2014, 2017, 2018, 2022, 2023, 2025) montrent les maisons, les rues et les ravines ; Sentinel-2 (chaque année de 2018 à 2025) montre les grandes évolutions. En touchant la carte, la fiche donne la date exacte de chaque image à cet endroit.</li>
+        <li><b>Quand une information manque,</b> la fiche affiche « Donnée indisponible » : rien n'est inventé.</li>
+      </ul>
+    </details>
+    <details class="more">
+      <summary>Méthode, sources et limites</summary>
+      <p><b>Pluie :</b> prévisions horaires des modèles NOAA GFS et ECMWF IFS (0,25°, environ 25 km) via <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a> (CC BY 4.0), relues à chaque visite. Les cumuls sur 24, 48 et 72 h partent de l'heure de consultation. Depuis le 4 novembre 2026, la vigilance utilise les <b>prévisions d'ensemble</b> : environ 120 scénarios (ECMWF 51, GFS 31, ICON 40, chaque modèle compte pour un tiers). La pluie retenue sur 72 h est celle que 4 scénarios sur 10 dépassent, et le tableau donne pour chaque jour la probabilité de dépasser 20, 35 et 50 mm. Auparavant, le modèle le plus pluvieux était retenu : cela annonçait de la pluie des jours où il n'a pas plu. Ces modèles lissent les orages locaux : un même jour, un quartier peut recevoir une forte pluie et le voisin rester sec.</p>
+      <p><b>Météo en direct :</b> nuages et orages Meteosat (© EUMETSAT, toutes les 15 min) et pluie estimée par satellite NASA GPM IMERG (toutes les 30 min, 4 à 6 h de retard), à activer sur la carte. Les satellites montrent les nuages et la pluie, pas les véhicules ni les personnes.</p>
+      <p><b>Vigilance expérimentale :</b> jaune dès 20 mm, orange dès 50 mm, rouge dès 80 mm en 72 h, avec un niveau de plus quand le bassin compte beaucoup d'enjeux exposés. Ces seuils sont des hypothèses BEGCED non calibrées, à valider avec des relevés de terrain et les autorités. Ce n'est pas un système officiel d'alerte.</p>
+      <p><b>Bassins pilotes :</b> B1 (centre, 7,5 km²), B2 (est, 10,4 km²) et B3 (ouest, 11,0 km²), délimités par BEGCED à partir de MERIT Hydro. Les impacts viennent du modèle UrbanRisk (Google Earth Engine, 27/10/2026) calculé pour 50, 100 et 150 mm, puis interpolés selon la pluie prévue. Bâtiments : Google Open Buildings v3 (images jusqu'en 2023) ; habitants : WorldPop 2020. Ailleurs dans la commune, aucun modèle d'inondation n'est encore publié.</p>
+      <p><b>Images d'archives (avant / après) :</b> Esri World Imagery Wayback, versions successives de l'imagerie mondiale d'Esri. Prises de vue au centre de la commune : WorldView-1 (31/03/2010), WorldView-2 (03/04/2014), WorldView-3 (27/04/2017), WorldView-4 (23/08/2018), GeoEye-1 (04/05/2022 et 13/05/2023), WorldView-2 (15/02/2025), résolution 0,3 à 0,5 m. Les dates peuvent varier d'un secteur à l'autre ; la fiche indique la date exacte au point touché. Ce sont des images réelles, sans retouche par BEGCED.</p>
+      <p><b>Images :</b> satellite haute résolution Esri World Imagery (sur Mont-Ngafula : WorldView-2, Vantor, 15/02/2025, 0,5 m, précision de position ≈ 8 m ; la date exacte de chaque endroit s'affiche dans la fiche). Sentinel-2 cloudless 2018 à 2025 © EOX IT Services (contient des données Copernicus Sentinel modifiées, licence CC BY-NC-SA 4.0), 10 m. Noms des routes et des lieux : Esri et OpenStreetMap.</p>
+      <p><b>Inondation (suivi satellite) :</b> Sentinel-1 GRD, polarisation VV, dernière acquisition et référence sur la même orbite (médiane de juin à août depuis 2023), filtrage spatial de 30 m. Un pixel est classé « eau anormale » si sa rétrodiffusion est inférieure à −18 dB, en baisse d'au moins 3 dB, hors eau permanente (JRC, occurrence &lt; 50 %), sur une pente &lt; 5° et à moins de 15 m au-dessus du réseau hydrographique (MERIT Hydro), en taches d'au moins 600 m². Le radar détecte mal l'eau entre des maisons serrées : l'absence de détection en zone bâtie n'exclut pas une inondation.</p>
+      <p><b>Érosion (suivi satellite) :</b> Sentinel-2 L2A, nuages masqués par Cloud Score+ ; médiane des 90 derniers jours comparée à la même période un an plus tôt. Sol mis à nu si l'indice de végétation passe de plus de 0,35 à moins de 0,20, l'indice de sol nu dépasse 0,05 et la pente (Copernicus DEM 30 m) atteint au moins 8°. Cela signale ravines, glissements, mais aussi terrassements et chantiers : la vérification de terrain fait la différence. Bâtiments : Google Open Buildings v3 (confiance ≥ 0,70).</p>
+      <p><b>Limite de la commune :</b> relation OpenStreetMap 389761 (admin_level 7). Les limites des quartiers ne sont pas publiées dans OpenStreetMap pour Mont-Ngafula : la fiche donne le nom du quartier quand il existe dans OSM, sans tracer de limite. Des limites validées par la commune pourront être ajoutées.</p>
+      <p><b>Recherche et noms de lieux :</b> Nominatim / OpenStreetMap (ODbL). Beaucoup d'avenues ne sont pas encore nommées dans OpenStreetMap.</p>
+    </details>
+  </section>
+
+  <footer>© 2026 BEGCED · UrbanRisk est un projet de BEGCED, « De la donnée à l'action ». Information publique et gratuite, à titre indicatif : ni alerte officielle, ni titre ou certificat foncier, ni carte réglementaire. Contact : <a href="/contact">begced.com/contact</a>.</footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/js/urbanrisk-alerte.js"></script>
+<script>
+(function () {
+"use strict";
+var $ = function (s) { return document.querySelector(s); };
+var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; }); };
+var nf = function (x, d) { return Number(x).toLocaleString("fr-FR", {maximumFractionDigits: d || 0, minimumFractionDigits: d || 0}); };
+function toast(t) { var e = $("#toast"); e.textContent = t; e.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(function () { e.hidden = true; }, 2800); }
+var NA = '<span class="na">Donnée indisponible</span>';
+
+/* ---------- Données géographiques ---------- */
+// Limite de la commune : OpenStreetMap, relation 389761 (lon,lat)
+var COMMUNE = "15.1298,-4.4445;15.1332,-4.4445;15.1380,-4.4458;15.1407,-4.4449;15.1428,-4.4471;15.1437,-4.4494;15.1451,-4.4511;15.1470,-4.4524;15.1519,-4.4529;15.1540,-4.4518;15.1548,-4.4522;15.1555,-4.4533;15.1623,-4.4557;15.1645,-4.4600;15.1658,-4.4614;15.1668,-4.4644;15.1711,-4.4705;15.1740,-4.4783;15.1741,-4.4844;15.1767,-4.4896;15.1754,-4.4943;15.1760,-4.4968;15.1757,-4.4980;15.1746,-4.4995;15.1736,-4.5032;15.1741,-4.5059;15.1763,-4.5077;15.1776,-4.5112;15.1776,-4.5141;15.1768,-4.5162;15.1737,-4.5205;15.1731,-4.5246;15.1723,-4.5268;15.1723,-4.5320;15.1737,-4.5331;15.1772,-4.5342;15.1797,-4.5338;15.1998,-4.5350;15.2072,-4.5364;15.2106,-4.5353;15.2133,-4.5364;15.2149,-4.5381;15.2172,-4.5395;15.2205,-4.5399;15.2198,-4.5405;15.2250,-4.5441;15.2273,-4.5464;15.2277,-4.5487;15.2286,-4.5503;15.2334,-4.5551;15.2362,-4.5561;15.2388,-4.5579;15.2407,-4.5605;15.2460,-4.5648;15.2517,-4.5656;15.2548,-4.5668;15.2609,-4.5726;15.2635,-4.5727;15.2649,-4.5742;15.2646,-4.5829;15.2622,-4.5891;15.2655,-4.5906;15.2668,-4.5924;15.2666,-4.6000;15.2669,-4.6021;15.2678,-4.6043;15.2729,-4.6107;15.2777,-4.6131;15.2865,-4.6216;15.2892,-4.6215;15.2919,-4.6208;15.2923,-4.6214;15.2933,-4.6216;15.2962,-4.6217;15.2963,-4.6223;15.2969,-4.6223;15.3008,-4.6213;15.3014,-4.6207;15.3014,-4.6219;15.3020,-4.6221;15.3020,-4.6227;15.3035,-4.6226;15.3036,-4.6230;15.3043,-4.6232;15.3042,-4.6237;15.3055,-4.6244;15.3106,-4.6241;15.3115,-4.6235;15.3119,-4.6239;15.3130,-4.6235;15.3150,-4.6246;15.3152,-4.6243;15.3173,-4.6277;15.3176,-4.6273;15.3196,-4.6291;15.3201,-4.6287;15.3204,-4.6299;15.3209,-4.6300;15.3220,-4.6316;15.3219,-4.6327;15.3234,-4.6322;15.3245,-4.6329;15.3249,-4.6323;15.3263,-4.6325;15.3269,-4.6319;15.3273,-4.6321;15.3276,-4.6363;15.3288,-4.6373;15.3299,-4.6373;15.3299,-4.6388;15.3308,-4.6392;15.3293,-4.6424;15.3297,-4.6428;15.3296,-4.6437;15.3312,-4.6448;15.3316,-4.6459;15.3327,-4.6462;15.3345,-4.6457;15.3354,-4.6468;15.3366,-4.6463;15.3373,-4.6466;15.3380,-4.6460;15.3386,-4.6466;15.3399,-4.6463;15.3404,-4.6457;15.3412,-4.6459;15.3414,-4.6452;15.3427,-4.6460;15.3440,-4.6459;15.3439,-4.6470;15.3451,-4.6469;15.3453,-4.6478;15.3491,-4.6477;15.3506,-4.6489;15.3510,-4.6485;15.3515,-4.6489;15.3527,-4.6485;15.3524,-4.6477;15.3538,-4.6470;15.3540,-4.6463;15.3579,-4.6465;15.3577,-4.6432;15.3585,-4.6427;15.3600,-4.6427;15.3589,-4.6439;15.3591,-4.6444;15.3620,-4.6440;15.3630,-4.6423;15.3648,-4.6412;15.3662,-4.6411;15.3680,-4.6398;15.3688,-4.6374;15.3710,-4.6371;15.3738,-4.6386;15.3758,-4.6366;15.3765,-4.6376;15.3783,-4.6374;15.3776,-4.6337;15.3814,-4.6317;15.3829,-4.6289;15.3852,-4.6287;15.3868,-4.6258;15.3904,-4.6247;15.3897,-4.6230;15.3908,-4.6206;15.3923,-4.6192;15.3924,-4.6184;15.3911,-4.6171;15.3926,-4.6132;15.3941,-4.6112;15.3969,-4.6103;15.3976,-4.6049;15.3997,-4.6032;15.4006,-4.6019;15.4037,-4.6009;15.4036,-4.5982;15.4057,-4.5926;15.4044,-4.5895;15.4070,-4.5888;15.4084,-4.5880;15.4080,-4.5861;15.4059,-4.5835;15.4063,-4.5824;15.4078,-4.5823;15.4078,-4.5820;15.4069,-4.5813;15.4050,-4.5780;15.4066,-4.5730;15.4059,-4.5718;15.4061,-4.5711;15.4044,-4.5666;15.4045,-4.5661;15.4066,-4.5648;15.4067,-4.5642;15.4053,-4.5614;15.4032,-4.5602;15.4073,-4.5541;15.4054,-4.5529;15.4001,-4.5547;15.3992,-4.5541;15.3984,-4.5516;15.3950,-4.5510;15.3947,-4.5476;15.3910,-4.5479;15.3910,-4.5444;15.3891,-4.5451;15.3903,-4.5424;15.3896,-4.5405;15.3891,-4.5401;15.3855,-4.5405;15.3837,-4.5396;15.3823,-4.5398;15.3824,-4.5340;15.3819,-4.5328;15.3810,-4.5314;15.3798,-4.5319;15.3786,-4.5304;15.3757,-4.5293;15.3753,-4.5284;15.3753,-4.5225;15.3746,-4.5171;15.3720,-4.5156;15.3687,-4.5153;15.3672,-4.5137;15.3667,-4.5115;15.3671,-4.5102;15.3694,-4.5074;15.3694,-4.5051;15.3671,-4.5042;15.3645,-4.5040;15.3600,-4.5023;15.3595,-4.5017;15.3599,-4.4934;15.3606,-4.4922;15.3604,-4.4915;15.3572,-4.4882;15.3560,-4.4888;15.3552,-4.4889;15.3548,-4.4884;15.3565,-4.4852;15.3546,-4.4845;15.3547,-4.4831;15.3537,-4.4827;15.3532,-4.4802;15.3505,-4.4789;15.3500,-4.4763;15.3492,-4.4747;15.3507,-4.4733;15.3508,-4.4704;15.3523,-4.4688;15.3545,-4.4642;15.3558,-4.4633;15.3556,-4.4616;15.3535,-4.4609;15.3530,-4.4586;15.3524,-4.4580;15.3544,-4.4546;15.3543,-4.4535;15.3527,-4.4520;15.3525,-4.4512;15.3552,-4.4499;15.3582,-4.4501;15.3598,-4.4487;15.3601,-4.4474;15.3593,-4.4463;15.3581,-4.4461;15.3568,-4.4470;15.3563,-4.4468;15.3574,-4.4458;15.3590,-4.4422;15.3608,-4.4415;15.3607,-4.4405;15.3592,-4.4394;15.3596,-4.4381;15.3587,-4.4382;15.3576,-4.4391;15.3563,-4.4391;15.3553,-4.4399;15.3535,-4.4401;15.3510,-4.4376;15.3424,-4.4352;15.3416,-4.4356;15.3382,-4.4337;15.3364,-4.4305;15.3352,-4.4296;15.3350,-4.4284;15.3325,-4.4275;15.3315,-4.4260;15.3304,-4.4257;15.3288,-4.4259;15.3258,-4.4288;15.3245,-4.4294;15.3203,-4.4290;15.3189,-4.4283;15.3167,-4.4288;15.3163,-4.4300;15.3125,-4.4306;15.3125,-4.4326;15.3116,-4.4338;15.3102,-4.4340;15.3100,-4.4344;15.3074,-4.4341;15.3075,-4.4324;15.3067,-4.4324;15.3067,-4.4301;15.3082,-4.4280;15.3086,-4.4262;15.3076,-4.4207;15.3021,-4.4122;15.3017,-4.4083;15.3039,-4.4030;15.3080,-4.3972;15.3077,-4.3954;15.3048,-4.3982;15.2982,-4.4006;15.2951,-4.4039;15.2900,-4.4082;15.2761,-4.4374;15.2748,-4.4381;15.2717,-4.4381;15.2657,-4.4412;15.2586,-4.4419;15.2567,-4.4402;15.2579,-4.4369;15.2580,-4.4338;15.2494,-4.4337;15.2475,-4.4327;15.2456,-4.4329;15.2449,-4.4320;15.2435,-4.4320;15.2429,-4.4314;15.2419,-4.4320;15.2417,-4.4313;15.2394,-4.4316;15.2389,-4.4307;15.2356,-4.4286;15.2346,-4.4272;15.2339,-4.4256;15.2337,-4.4214;15.2305,-4.4202;15.2279,-4.4179;15.2277,-4.4154;15.2262,-4.4120;15.2264,-4.4101;15.2251,-4.4085;15.2233,-4.4031;15.2239,-4.4006;15.2229,-4.3992;15.2234,-4.3948;15.2229,-4.3930;15.2235,-4.3916;15.2230,-4.3895;15.2232,-4.3878;15.2222,-4.3840;15.2176,-4.3774;15.2148,-4.3708;15.2137,-4.3693;15.2133,-4.3671;15.2136,-4.3664;15.2137,-4.3621;15.2132,-4.3612;15.2124,-4.3608;15.2119,-4.3589;15.2093,-4.3561;15.2105,-4.3547;15.2114,-4.3514;15.2111,-4.3505;15.2087,-4.3478;15.2077,-4.3478;15.2056,-4.3458;15.2034,-4.3455;15.1994,-4.3432;15.1983,-4.3431;15.1961,-4.3414;15.1904,-4.3398;15.1885,-4.3408;15.1874,-4.3434;15.1879,-4.3473;15.1874,-4.3502;15.1879,-4.3519;15.1875,-4.3537;15.1869,-4.3541;15.1871,-4.3550;15.1859,-4.3560;15.1866,-4.3561;15.1865,-4.3566;15.1854,-4.3579;15.1848,-4.3579;15.1840,-4.3594;15.1843,-4.3608;15.1850,-4.3604;15.1855,-4.3608;15.1847,-4.3666;15.1830,-4.3679;15.1809,-4.3674;15.1784,-4.3679;15.1776,-4.3693;15.1772,-4.3715;15.1775,-4.3754;15.1771,-4.3781;15.1783,-4.3813;15.1784,-4.3837;15.1794,-4.3849;15.1793,-4.3858;15.1807,-4.3883;15.1827,-4.3880;15.1818,-4.3889;15.1825,-4.3897;15.1824,-4.3903;15.1791,-4.3902;15.1779,-4.3918;15.1757,-4.3929;15.1750,-4.3939;15.1747,-4.3948;15.1758,-4.3967;15.1754,-4.3971;15.1701,-4.3978;15.1674,-4.3997;15.1660,-4.4017;15.1649,-4.4025;15.1645,-4.4023;15.1639,-4.4032;15.1638,-4.4046;15.1624,-4.4051;15.1612,-4.4065;15.1625,-4.4105;15.1621,-4.4108;15.1611,-4.4090;15.1601,-4.4082;15.1570,-4.4098;15.1569,-4.4126;15.1551,-4.4130;15.1548,-4.4126;15.1520,-4.4134;15.1513,-4.4154;15.1505,-4.4155;15.1502,-4.4149;15.1495,-4.4162;15.1489,-4.4158;15.1491,-4.4153;15.1486,-4.4163;15.1474,-4.4168;15.1443,-4.4217;15.1443,-4.4239;15.1432,-4.4250;15.1436,-4.4256;15.1413,-4.4261;15.1404,-4.4269;15.1387,-4.4314;15.1388,-4.4348;15.1344,-4.4365;15.1350,-4.4396;15.1313,-4.4408;15.1310,-4.4405;15.1308,-4.4416;15.1298,-4.4429;15.1298,-4.4445".split(";").map(function (p) { var a = p.split(","); return [Number(a[1]), Number(a[0])]; });
+// Bassins pilotes BEGCED (MERIT Hydro) : coordonnées × 10 000, différences successives
+var CODE = "152713,-44779;25,0;0,8;16,0;0,8;17,0;0,-8;8,0;0,8;9,0;0,17;8,0;0,8;-8,0;0,9;8,0;0,16;-25,0;0,9;-8,0;0,8;-9,0;0,17;-8,0;0,8;8,0;0,17;-8,0;0,8;-8,0;0,17;-9,0;0,8;-16,0;0,8;-9,0;0,9;-8,0;0,8;-8,0;0,8;-9,0;0,9;-16,0;0,33;-9,0;0,42;-8,0;0,16;8,0;0,17;-8,0;0,8;-8,0;0,9;-9,0;0,25;-16,0;0,-9;-17,0;0,-8;-25,0;0,-8;-25,0;0,8;-25,0;0,-8;-9,0;0,-9;-8,0;0,-41;-17,0;0,-9;-8,0;0,-8;-8,0;0,-8;-8,0;0,-17;-9,0;0,-8;-8,0;0,-9;-8,0;0,-33;-9,0;0,-17;17,0;0,-8;16,0;1,-8;8,0;0,-9;8,0;0,-8;9,0;-1,-8;9,0;0,-9;16,0;0,-8;17,0;0,-8;25,0;0,8;9,0;0,-8;16,0;0,-9;17,0;0,-8;8,0;0,-17;17,0;0,-8;17,0;0,-8;16,0;0,-9;17,0;0,-16;33,0;0,-9;9,0;0,-16|153838,-44896;16,0;0,8;17,0;0,17;8,0;0,9;9,0;0,8;16,0;0,-8;9,0;0,-9;8,0;0,-8;8,0;0,-9;59,0;0,9;16,0;0,8;9,0;0,-8;33,0;0,-9;8,0;0,9;25,0;0,8;17,0;0,9;17,0;0,8;-9,0;0,8;-8,0;0,8;-8,0;0,9;-17,0;0,8;-25,0;0,8;-8,0;0,9;-9,0;0,8;-8,0;0,58;-8,0;0,9;-42,0;0,8;-8,0;0,8;-9,0;0,17;-8,0;0,9;-8,-1;0,9;-17,0;0,8;-17,0;0,8;-8,0;0,9;-17,0;0,8;-8,0;0,8;-17,0;0,17;-8,0;0,8;-8,0;0,9;-9,0;0,8;-33,0;0,-8;-17,0;0,8;-33,0;0,-8;-8,0;0,-9;-9,0;0,-8;-8,0;0,8;-25,0;0,-8;-25,0;0,-8;-17,0;0,-17;-8,0;0,-33;-8,0;0,8;-34,0;0,8;-16,0;0,-8;-25,0;0,-8;8,0;0,-42;8,0;0,-8;9,0;0,-9;8,0;0,-8;17,0;0,-8;41,0;0,-9;17,0;0,9;8,0;0,-9;9,0;0,-8;16,0;0,-8;9,0;0,-9;16,0;0,-8;42,0;0,-33;-9,0;0,-9;9,0;0,-16;8,0;0,-8;34,0;0,-9;8,0;0,-8;8,0;0,-9;9,0;0,-8|152021,-45329;33,0;0,8;9,0;0,17;16,0;0,8;9,0;0,8;33,0;0,-8;8,0;0,-8;9,0;0,-9;8,0;0,9;17,0;0,-9;41,0;0,-8;34,0;0,8;16,0;0,9;-8,0;0,8;-8,0;0,33;-9,0;0,25;-8,0;0,9;-8,0;0,16;-9,0;0,9;9,0;0,25;8,0;0,8;8,0;0,8;25,1;0,8;9,0;0,8;8,0;0,8;8,0;0,34;-8,0;0,25;-8,0;0,16;-9,0;0,17;-8,0;0,8;-8,0;0,9;-9,0;0,8;-8,0;0,-8;-8,0;0,-9;-9,0;0,-8;-8,0;0,-8;-34,0;1,-9;-9,0;0,9;-25,0;0,8;-25,0;0,8;-8,0;0,9;-8,0;0,8;-9,0;0,17;-33,0;0,8;-17,0;0,-8;-8,0;0,-8;-50,0;0,-9;-8,0;0,-8;-9,0;0,-9;-8,0;0,-8;-8,0;0,-8;-25,0;0,-9;-9,0;0,-8;-8,0;0,-33;-8,0;0,-9;8,0;0,-16;8,0;0,-17;9,0;0,-33;8,0;0,-42;8,0;0,-8;9,0;0,-17;8,0;0,-8;8,0;0,-9;9,0;0,-8;8,0;0,-8;8,0;0,-17;9,0;0,-8;8,0;0,-9;17,0;0,-8;8,0;0,-8";
+var B = [
+  {code: "B1", nom: "B1 · centre", km2: 7.5, bat: 18073, rav: 9331, r: {50: [2.3, 13, 4, 138, 575], 100: [15.3, 165, 10, 617, 1149], 150: [20.9, 272, 30, 793, 1724]}},
+  {code: "B2", nom: "B2 · est", km2: 10.4, bat: 4489, rav: 206, r: {50: [0, 0, 0, 0, 925], 100: [21.1, 25, 1, 2100, 1849], 150: [34.6, 36, 4, 2827, 2774]}},
+  {code: "B3", nom: "B3 · ouest", km2: 11.0, bat: 7077, rav: 932, r: {50: [3.2, 0, 0, 39, 844], 100: [27, 8, 0, 318, 1689], 150: [37.6, 8, 1, 487, 2533]}}
+];
+CODE.split("|").forEach(function (anneau, i) {
+  var x = 0, y = 0;
+  B[i].ring = anneau.split(";").map(function (p) { var d = p.split(","); x += Number(d[0]); y += Number(d[1]); return [y / 1e4, x / 1e4]; });
+});
+function inside(lat, lon, ring) { // ring : [[lat,lon],…]
+  var c = false;
+  for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    var yi = ring[i][0], xi = ring[i][1], yj = ring[j][0], xj = ring[j][1];
+    if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) c = !c;
+  }
+  return c;
+}
+var inCommune = function (lat, lon) { return inside(lat, lon, COMMUNE); };
+var basinAt = function (lat, lon) { for (var i = 0; i < B.length; i++) if (inside(lat, lon, B[i].ring)) return B[i]; return null; };
+
+/* ---------- Vigilance (méthode UrbanRisk v0.2) ---------- */
+var SEUILS = [20, 50, 80], SEUIL_RAVINE = 30, NOMS = ["Aucune", "Jaune", "Orange", "Rouge"];
+var FOND = ["#cfd6df", "#ffe45c", "#f5a03a", "#e5483b"];
+function impacts(b, P) {
+  var x = [0, 50, 100, 150], y = [[0, 0, 0, 0, 0], b.r[50], b.r[100], b.r[150]];
+  if (P >= 150) return y[3].slice();
+  for (var i = 0; i < 3; i++) if (P <= x[i + 1]) { var t = (P - x[i]) / (x[i + 1] - x[i]); return y[i].map(function (v, j) { return v + t * (y[i + 1][j] - v); }); }
+}
+function niveauPluie(P) { return P >= SEUILS[2] ? 3 : P >= SEUILS[1] ? 2 : P >= SEUILS[0] ? 1 : 0; }
+function vigilance(b, P, v) {
+  var n = niveauPluie(P), enjeux = v[1] >= 50 || v[2] >= 10 || (P >= SEUIL_RAVINE && b.rav >= 2000);
+  return n > 0 && enjeux ? Math.min(3, n + 1) : n;
+}
+function pourquoi(b, P, v, niv) {
+  var n = niveauPluie(P);
+  var s = "Pluie retenue " + nf(P) + " mm en 72 h → niveau " + NOMS[n].toLowerCase() + " selon les seuils 20 / 50 / 80 mm";
+  if (niv > n) s += " ; un niveau de plus car " + (b.rav >= 2000 && P >= SEUIL_RAVINE ? "plus de 2 000 bâtiments sont sur des versants à ravines" : "plus de 50 bâtiments seraient touchés par l'eau");
+  return s + ".";
+}
+
+/* ---------- Carte ---------- */
+var map = L.map("map", {zoomControl: false, minZoom: 10, maxZoom: 20, preferCanvas: false});
+window.urMap = map; // utilisé par la couche « Météo en direct »
+var esriAttr = 'Imagerie © <a href="https://www.esri.com/">Esri</a>, Vantor, Earthstar Geographics';
+var bases = {
+  esri: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom: 19, maxZoom: 20, attribution: esriAttr}),
+  osm: L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxNativeZoom: 19, maxZoom: 20, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}),
+  s2024: L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg", {maxNativeZoom: 15, maxZoom: 20, attribution: '<a href="https://s2maps.eu">Sentinel-2 cloudless 2024</a> © EOX (données Copernicus Sentinel modifiées, CC BY-NC-SA 4.0)'}),
+  s2020: L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg", {maxNativeZoom: 15, maxZoom: 20, attribution: '<a href="https://s2maps.eu">Sentinel-2 cloudless 2020</a> © EOX (données Copernicus Sentinel modifiées, CC BY-NC-SA 4.0)'})
+};
+var labels = L.layerGroup([
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom: 19, maxZoom: 20, pane: "overlayPane", opacity: 0.9}),
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {maxNativeZoom: 19, maxZoom: 20, pane: "overlayPane"})
+]);
+var tileErr = 0;
+Object.keys(bases).forEach(function (k) { bases[k].on("tileerror", function () { if (++tileErr === 6) toast("Certaines images ne se chargent pas : connexion lente ou service indisponible."); }); });
+L.control.zoom({position: "bottomright", zoomInTitle: "Zoomer", zoomOutTitle: "Dézoomer"}).addTo(map);
+L.control.scale({imperial: false, position: "bottomright"}).addTo(map);
+var current = bases.esri.addTo(map);
+labels.addTo(map);
+
+var world = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
+var communeLayer = L.layerGroup([
+  L.polygon([world, COMMUNE], {stroke: false, fillColor: "#0B1220", fillOpacity: 0.45, interactive: false}),
+  L.polygon(COMMUNE, {color: "#FFD43B", weight: 3, fill: false, interactive: false, dashArray: "8 5"})
+]).addTo(map);
+var communeBounds = L.latLngBounds(COMMUNE);
+map.fitBounds(communeBounds, {padding: [10, 10]});
+map.setMaxBounds(communeBounds.pad(0.6));
+
+var basinLayer = L.layerGroup().addTo(map);
+B.forEach(function (b) {
+  b.poly = L.polygon(b.ring, {color: "#00E5FF", weight: 3, opacity: 0.95, fillColor: FOND[0], fillOpacity: 0}).addTo(basinLayer);
+  b.poly.bindTooltip(b.code, {permanent: true, direction: "center", className: "", opacity: 0.9});
+});
+
+/* ---------- Avant / après (curseur) ---------- */
+var WB = "https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/";
+// Images haute résolution d'archive (Esri World Imagery Wayback) sur Mont-Ngafula : [version Wayback, date de prise de vue, capteur]
+var ARCHIVES = [[10, "2010-03-31", "WorldView-1, noir et blanc", "2014_r01"], [1052, "2014-04-03", "WorldView-2", "2017_r07"], [7072, "2017-04-27", "WorldView-3", "2018_r04"], [8495, "2018-08-23", "WorldView-4", "2020_r03"], [7110, "2022-05-04", "GeoEye-1", "2022_r14"], [17632, "2023-05-13", "GeoEye-1", "2023_r07"], [20512, "2025-02-15", "WorldView-2", "2025_r10"]];
+var S2Y = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+var fr = function (d) { return d.slice(8, 10) + "/" + d.slice(5, 7) + "/" + d.slice(0, 4); };
+var IMGS = ARCHIVES.map(function (a) {
+  return {key: "wb" + a[0], tri: a[1], meta: a[3], label: a[1].slice(0, 4) + " · satellite haute résolution (" + a[2] + ")", court: a[1].slice(0, 4),
+    make: function () { return L.tileLayer(WB + a[0] + "/{z}/{y}/{x}", {maxNativeZoom: 19, maxZoom: 20, attribution: esriAttr + " · archives Esri Wayback"}); }};
+}).concat(S2Y.map(function (y) {
+  return {key: "s2" + y, tri: y + "-07-01", label: "Année " + y + " · Sentinel-2 10 m", court: "Sentinel-2 " + y,
+    make: function () { return L.tileLayer("https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-" + y + "_3857/default/g/{z}/{y}/{x}.jpg", {maxNativeZoom: 15, maxZoom: 20, attribution: "Sentinel-2 cloudless " + y + " © EOX (Copernicus, CC BY-NC-SA 4.0)"}); }};
+})).sort(function (a, b) { return a.tri < b.tri ? -1 : 1; });
+var cmp = {on: false, a: null, b: null, x: 0.5};
+var selA = $("#cmp-a"), selB = $("#cmp-b");
+[selA, selB].forEach(function (s) {
+  [["wb", "Haute résolution : on voit les maisons"], ["s2", "Sentinel-2 10 m : grandes évolutions"]].forEach(function (g) {
+    var og = document.createElement("optgroup"); og.label = g[1];
+    IMGS.filter(function (im) { return im.key.indexOf(g[0]) === 0; }).forEach(function (im) { var o = document.createElement("option"); o.value = im.key; o.textContent = im.label.replace(" · Sentinel-2 10 m", ""); og.appendChild(o); });
+    s.appendChild(og);
+  });
+});
+var hr = IMGS.filter(function (i) { return i.key.indexOf("wb") === 0; });
+selA.value = hr[0].key; selB.value = hr[hr.length - 1].key;
+var imgByKey = function (k) { return IMGS.filter(function (i) { return i.key === k; })[0]; };
+function cmpUpdate() {
+  if (!cmp.on || !cmp.a || !cmp.b) return;
+  var size = map.getSize(), px = Math.round(size.x * cmp.x);
+  var nw = map.containerPointToLayerPoint([0, 0]), se = map.containerPointToLayerPoint(size);
+  var poly = function (x0, x1) { return "polygon(" + [[x0, nw.y], [x1, nw.y], [x1, se.y], [x0, se.y]].map(function (p) { return p[0] + "px " + p[1] + "px"; }).join(",") + ")"; };
+  var ca = cmp.a.getContainer().style, cb = cmp.b.getContainer().style;
+  ca.willChange = cb.willChange = "clip-path";
+  ca.clipPath = ca.webkitClipPath = poly(nw.x, nw.x + px);
+  cb.clipPath = cb.webkitClipPath = poly(nw.x + px, se.x);
+  $("#bar-v").style.left = px + "px";
+  $("#tag-a").style.right = (size.x - px + 8) + "px"; $("#tag-b").style.left = (px + 8) + "px";
+}
+function cmpBuild() {
+  if (cmp.a) map.removeLayer(cmp.a); if (cmp.b) map.removeLayer(cmp.b);
+  var A = imgByKey(selA.value), Bi = imgByKey(selB.value);
+  cmp.a = A.make().addTo(map); cmp.b = Bi.make().addTo(map);
+  cmp.a.setZIndex(1); cmp.b.setZIndex(2);
+  $("#tag-a").textContent = "◀ Avant : " + A.court; $("#tag-b").textContent = "Après : " + Bi.court + " ▶";
+  cmpUpdate(); if (lastPt) renderImageInfo();
+}
+function cmpSet(on) {
+  cmp.on = on; $("#o-cmp").checked = on; $("#cmp-sel").hidden = !on; $("#swipe").hidden = !on;
+  if (on) { map.removeLayer(current); cmpBuild(); if (window.matchMedia("(max-width:760px)").matches) $("#layers").open = false; toast("Faites glisser le curseur blanc pour comparer avant et après."); }
+  else { if (cmp.a) map.removeLayer(cmp.a); if (cmp.b) map.removeLayer(cmp.b); cmp.a = cmp.b = null; current.addTo(map); current.bringToBack(); if (lastPt) renderImageInfo(); }
+}
+$("#o-cmp").addEventListener("change", function (e) { cmpSet(e.target.checked); });
+selA.addEventListener("change", cmpBuild); selB.addEventListener("change", cmpBuild);
+map.on("move zoom zoomend resize viewreset", cmpUpdate);
+(function () {
+  var bar = $("#bar-v"), drag = false;
+  L.DomEvent.disableClickPropagation(bar); L.DomEvent.disableScrollPropagation(bar);
+  var moveTo = function (clientX) { var r = $("#map").getBoundingClientRect(); cmp.x = Math.min(0.98, Math.max(0.02, (clientX - r.left) / r.width)); cmpUpdate(); };
+  bar.addEventListener("pointerdown", function (e) { drag = true; map.dragging.disable(); bar.setPointerCapture(e.pointerId); e.preventDefault(); });
+  bar.addEventListener("pointermove", function (e) { if (drag) moveTo(e.clientX); });
+  var stop = function () { if (drag) { drag = false; map.dragging.enable(); } };
+  bar.addEventListener("pointerup", stop); bar.addEventListener("pointercancel", stop);
+  $("#knob").addEventListener("keydown", function (e) {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); cmp.x = Math.min(0.98, Math.max(0.02, cmp.x + (e.key === "ArrowLeft" ? -0.05 : 0.05))); cmpUpdate(); }
+  });
+})();
+
+document.querySelectorAll('input[name=base]').forEach(function (r) {
+  r.addEventListener("change", function () {
+    if (cmp.on) cmpSet(false);
+    map.removeLayer(current); current = bases[r.value].addTo(map); current.bringToBack();
+    var lab = $("#o-labels");
+    if (r.value === "osm" && lab.checked) { lab.checked = false; map.removeLayer(labels); }
+    else if (r.value !== "osm" && !lab.checked && !lab.dataset.user) { lab.checked = true; labels.addTo(map); }
+    if (lastPt) renderImageInfo();
+  });
+});
+$("#o-labels").addEventListener("change", function (e) { e.target.dataset.user = "1"; e.target.checked ? labels.addTo(map) : map.removeLayer(labels); });
+$("#o-commune").addEventListener("change", function (e) { e.target.checked ? communeLayer.addTo(map) : map.removeLayer(communeLayer); });
+$("#o-basins").addEventListener("change", function (e) { e.target.checked ? basinLayer.addTo(map) : map.removeLayer(basinLayer); });
+$("#b-home").addEventListener("click", function () { closeCard(); map.flyToBounds(communeBounds, {padding: [10, 10], duration: 0.8}); });
+if (window.matchMedia("(max-width:760px)").matches) $("#layers").open = false;
+
+/* ---------- Services externes ---------- */
+function getJSON(url, ms) {
+  var ctl = "AbortController" in window ? new AbortController() : null;
+  var t = ctl ? setTimeout(function () { ctl.abort(); }, ms || 12000) : 0;
+  return fetch(url, ctl ? {signal: ctl.signal} : {}).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+}
+// Nominatim : 1 requête par seconde au plus
+var nomiLast = 0;
+function nominatim(path) {
+  var wait = Math.max(0, nomiLast + 1100 - Date.now()); nomiLast = Date.now() + wait;
+  return new Promise(function (res) { setTimeout(res, wait); }).then(function () { return getJSON("https://nominatim.openstreetmap.org/" + path + "&accept-language=fr&email=begced.officiel%40gmail.com"); });
+}
+var rainCache = {};
+function rainAt(lat, lon) {
+  var key = lat.toFixed(2) + "," + lon.toFixed(2);
+  if (rainCache[key]) return rainCache[key];
+  var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat.toFixed(4) + "&longitude=" + lon.toFixed(4) +
+    "&hourly=precipitation&models=gfs_seamless,ecmwf_ifs025&forecast_days=4&timezone=GMT";
+  return (rainCache[key] = getJSON(url).then(function (j) { return sums(j); }).catch(function (e) { delete rainCache[key]; throw e; }));
+}
+function sums(loc) {
+  var now = Date.now(), t = loc.hourly.time.map(function (s) { return Date.parse(s + ":00Z"); });
+  var out = {start: now, end: now + 72 * 3600e3};
+  ["gfs_seamless", "ecmwf_ifs025"].forEach(function (m) {
+    var a = loc.hourly["precipitation_" + m] || [], s = [0, 0, 0], n = 0;
+    for (var i = 0; i < a.length; i++) {
+      var dt = t[i] - now; if (dt < 0 || dt >= 72 * 3600e3 || a[i] == null) continue;
+      n++; var k = Math.floor(dt / 86400e3); for (var q = k; q < 3; q++) s[q] += a[i];
+    }
+    out[m] = n >= 60 ? s : null; // moins de 60 h disponibles : on ne publie pas de cumul
+  });
+  return out;
+}
+var fmtDate = function (ms) { return new Date(ms).toLocaleString("fr-FR", {timeZone: "Africa/Kinshasa", weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"}); };
+
+/* ---------- Fiche d'un lieu ---------- */
+var marker = null, lastPt = null, seq = 0;
+function closeCard() { $("#card").hidden = true; if (marker) { map.removeLayer(marker); marker = null; } lastPt = null; }
+$("#card-x").addEventListener("click", closeCard);
+document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeCard(); $("#results").hidden = true; } });
+
+function openPlace(lat, lon, hint) {
+  var id = ++seq; lastPt = {lat: lat, lon: lon};
+  if (marker) marker.setLatLng([lat, lon]); else marker = L.marker([lat, lon], {keyboard: false}).addTo(map);
+  var inC = inCommune(lat, lon), b = basinAt(lat, lon);
+  $("#card").hidden = false;
+  $("#card-body").innerHTML =
+    '<h2 id="c-name">' + esc(hint || "Lieu sélectionné") + '</h2><p class="sub" id="c-sub"><span class="load">Recherche du nom du lieu…</span></p>' +
+    '<dl><dt>Commune</dt><dd>' + (inC ? "Mont-Ngafula" : "Hors de Mont-Ngafula") + '</dd>' +
+    '<dt>GPS</dt><dd>' + lat.toFixed(5) + ", " + lon.toFixed(5) + '</dd>' +
+    '<dt>Image</dt><dd id="c-img"><span class="load">…</span></dd></dl>' +
+    '<div class="acts"><a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps?q=' + lat.toFixed(6) + "," + lon.toFixed(6) + '">Itinéraire</a>' +
+    '<button class="btn" type="button" id="c-copy">Copier le GPS</button>' +
+    '<button class="btn" type="button" id="c-zoom">Zoomer ici</button></div>' +
+    '<h3>Pluie prévue à cet endroit</h3><div id="c-rain"><span class="load">Lecture des prévisions…</span></div>' +
+    '<h3>Exposition</h3><div id="c-exp">' + exposureHtml(b, null) + '</div>' +
+    '<p class="note">Sources : OpenStreetMap, Esri, Open-Meteo, modèle UrbanRisk v0.2. Indicatif, non officiel.</p>';
+  $("#c-copy").addEventListener("click", function () {
+    var t = lat.toFixed(6) + ", " + lon.toFixed(6);
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast("Coordonnées copiées : " + t); }, function () { toast(t); });
+  });
+  $("#c-zoom").addEventListener("click", function () { map.flyTo([lat, lon], 19, {duration: 0.8}); });
+  renderImageInfo();
+
+  nominatim("reverse?format=jsonv2&zoom=18&addressdetails=1&lat=" + lat + "&lon=" + lon).then(function (j) {
+    if (id !== seq) return;
+    var a = j.address || {};
+    var rue = a.road || a.pedestrian || a.footway || a.path || a.track;
+    var nom = j.name && j.name !== rue ? j.name : "";
+    var quartier = [a.neighbourhood, a.quarter, a.suburb, a.hamlet, a.village, a.town].filter(function (v, i, s) { return v && s.indexOf(v) === i; });
+    $("#c-name").textContent = hint || nom || quartier[0] || rue || (inC ? "Lieu à Mont-Ngafula" : "Lieu sélectionné");
+    var bits = [];
+    if (rue && (hint || nom || quartier.length)) bits.push(rue);
+    if (quartier.length) bits.push("Quartier / localité : " + quartier.join(", "));
+    $("#c-sub").textContent = bits.join(" · ");
+  }).catch(function () { if (id === seq) $("#c-sub").innerHTML = "Nom du lieu : " + NA + " (service OpenStreetMap injoignable)"; });
+
+  rainAt(lat, lon).then(function (r) {
+    if (id !== seq) return;
+    $("#c-rain").innerHTML = rainHtml(r);
+    var P = Math.max(r.gfs_seamless ? r.gfs_seamless[2] : 0, r.ecmwf_ifs025 ? r.ecmwf_ifs025[2] : 0);
+    if (r.gfs_seamless || r.ecmwf_ifs025) $("#c-exp").innerHTML = exposureHtml(b, P);
+  }).catch(function () { if (id === seq) $("#c-rain").innerHTML = NA + " : le service de prévision ne répond pas. Réessayez plus tard."; });
+}
+
+function rainHtml(r) {
+  var g = r.gfs_seamless, e = r.ecmwf_ifs025, cell = function (a, i) { return a ? nf(a[i]) + " mm" : "–"; };
+  if (!g && !e) return NA;
+  var h = '<table class="rain"><thead><tr><th>Cumul</th><th>24 h</th><th>48 h</th><th>72 h</th></tr></thead><tbody>' +
+    '<tr><td>GFS (NOAA)</td><td>' + cell(g, 0) + '</td><td>' + cell(g, 1) + '</td><td>' + cell(g, 2) + '</td></tr>' +
+    '<tr><td>ECMWF</td><td>' + cell(e, 0) + '</td><td>' + cell(e, 1) + '</td><td>' + cell(e, 2) + '</td></tr></tbody></table>';
+  var P = g && e ? (g[2] + e[2]) / 2 : (g ? g[2] : e[2]), n = niveauPluie(P);
+  var ecart = g && e ? Math.abs(g[2] - e[2]) : null;
+  h += '<p class="note">Du ' + fmtDate(r.start) + " au " + fmtDate(r.end) + " (heure de Kinshasa)." +
+    (ecart !== null ? " Écart entre modèles sur 72 h : " + nf(ecart) + " mm" + (ecart >= 20 ? " : prévision très incertaine." : ".") : " Un des deux modèles est indisponible.") + "</p>" +
+    '<p style="margin:6px 0 0">Moyenne des deux modèles : <b>' + nf(P) + ' mm</b> en 72 h · niveau de pluie <span class="pill v' + n + '">' + NOMS[n].toLowerCase() + "</span></p>";
+  return h;
+}
+
+function exposureHtml(b, P) {
+  if (!b) return '<p style="margin:0">Hors des 3 bassins pilotes : le modèle d\'inondation et de ravinement n\'est pas encore publié ici.</p>' +
+    '<dl style="margin-top:6px"><dt>Zones basses, ravines</dt><dd>' + NA + '</dd><dt>Bâtiments exposés</dt><dd>' + NA + '</dd></dl>';
+  if (P == null) return '<p style="margin:0">Bassin pilote <b>' + b.nom + '</b> · ' + nf(b.km2, 1) + ' km² · ' + nf(b.bat) + ' bâtiments cartographiés (Open Buildings v3).</p><p class="load">Calcul de la vigilance…</p>';
+  var v = impacts(b, P), niv = vigilance(b, P, v);
+  return '<p style="margin:0 0 6px">Bassin pilote <b>' + b.nom + '</b> · <span class="pill v' + niv + '">Vigilance ' + NOMS[niv].toLowerCase() + '</span></p>' +
+    '<dl><dt>Bâtiments cartographiés</dt><dd>' + nf(b.bat) + '</dd>' +
+    '<dt>Bâtiments potentiellement touchés par l\'eau (modèle)</dt><dd>' + nf(v[1]) + '</dd>' +
+    '<dt>Bâtiments sur versants à ravines (modèle)</dt><dd>' + (P >= SEUIL_RAVINE ? nf(b.rav) : "0") + '</dd>' +
+    '<dt>Inondation observée</dt><dd>' + NA + '</dd></dl>' +
+    '<p class="note">' + esc(pourquoi(b, P, v, niv)) + " Chiffres pour tout le bassin, pas pour ce bâtiment.</p>";
+}
+
+var imgCache = {};
+function renderImageInfo() {
+  if (!lastPt) return;
+  var el = $("#c-img"); if (!el) return;
+  if (cmp.on) {
+    var IA = imgByKey(selA.value), IB = imgByKey(selB.value), pt = lastPt;
+    el.innerHTML = '<span class="load">…</span>';
+    Promise.all([IA, IB].map(function (im) {
+      if (!im.meta) return Promise.resolve(im.label);
+      return getJSON("https://metadata.maptiles.arcgis.com/arcgis/rest/services/World_Imagery_Metadata_" + im.meta + "/MapServer/identify?geometry=" + pt.lon + "," + pt.lat +
+        "&geometryType=esriGeometryPoint&sr=4326&layers=all&tolerance=1&mapExtent=" + (pt.lon - .005) + "," + (pt.lat - .005) + "," + (pt.lon + .005) + "," + (pt.lat + .005) +
+        "&imageDisplay=400,400,96&returnGeometry=false&f=json", 15000).then(function (j) {
+        var best = null;
+        (j.results || []).forEach(function (r) { var a = r.attributes || {}, res = parseFloat(a.SRC_RES); if (!isNaN(res) && (!best || res < best.res)) best = {res: res, d: String(a.SRC_DATE || "")}; });
+        if (!best || !/^\d{8}$/.test(best.d)) return im.court + " (date exacte indisponible)";
+        return best.d.slice(6, 8) + "/" + best.d.slice(4, 6) + "/" + best.d.slice(0, 4) + " · " + nf(best.res, 1) + " m";
+      }).catch(function () { return im.court + " (date exacte indisponible)"; });
+    })).then(function (t) { if (el.isConnected && lastPt === pt) el.innerHTML = "Avant : " + esc(t[0]) + "<br>Après : " + esc(t[1]); });
+    return;
+  }
+  var base = document.querySelector("input[name=base]:checked").value;
+  if (base === "osm") { el.textContent = "Plan OpenStreetMap (pas une image)"; return; }
+  if (base === "s2024" || base === "s2020") { el.textContent = "Sentinel-2 sans nuages " + base.slice(2) + " · 10 m · EOX"; return; }
+  var p = lastPt, key = p.lat.toFixed(3) + "," + p.lon.toFixed(3);
+  el.innerHTML = '<span class="load">…</span>';
+  (imgCache[key] = imgCache[key] || getJSON("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/identify?geometry=" + p.lon + "," + p.lat +
+    "&geometryType=esriGeometryPoint&sr=4326&layers=all&tolerance=1&mapExtent=" + (p.lon - .005) + "," + (p.lat - .005) + "," + (p.lon + .005) + "," + (p.lat + .005) +
+    "&imageDisplay=400,400,96&returnGeometry=false&f=json")).then(function (j) {
+    var best = null;
+    (j.results || []).forEach(function (r) { var a = r.attributes || {}, res = parseFloat(a["RESOLUTION (M)"]); if (!isNaN(res) && (!best || res < best.res)) best = {res: res, a: a}; });
+    if (!best) throw 0;
+    var d = String(best.a["DATE (YYYYMMDD)"] || ""), date = /^\d{8}$/.test(d) ? d.slice(6, 8) + "/" + d.slice(4, 6) + "/" + d.slice(0, 4) : "date inconnue";
+    var txt = date + " · " + nf(best.res, best.res < 1 ? 1 : 0) + " m · " + (best.a.SOURCE || "Esri") + (best.a.DESCRIPTION ? " (" + best.a.DESCRIPTION.replace("WV0", "WorldView-") + ")" : "");
+    if (el.isConnected) el.textContent = txt;
+  }).catch(function () { delete imgCache[key]; if (el.isConnected) el.innerHTML = "Esri World Imagery · date " + NA.toLowerCase(); });
+}
+// Date de l'image au centre de la commune, pour le panneau des couches
+getJSON("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/identify?geometry=15.2775,-4.475&geometryType=esriGeometryPoint&sr=4326&layers=all&tolerance=1&mapExtent=15.27,-4.48,15.28,-4.47&imageDisplay=400,400,96&returnGeometry=false&f=json").then(function (j) {
+  var a = ((j.results || [])[0] || {}).attributes || {}, d = String(a["DATE (YYYYMMDD)"] || "");
+  if (/^\d{8}$/.test(d)) $("#esri-meta").textContent = "Esri · " + (a.SOURCE || "Vantor") + " · " + d.slice(6, 8) + "/" + d.slice(4, 6) + "/" + d.slice(0, 4) + " · " + String(a["RESOLUTION (M)"] || "0.5").replace(".", ",") + " m";
+}).catch(function () {});
+
+map.on("click", function (e) { $("#results").hidden = true; openPlace(e.latlng.lat, e.latlng.lng); });
+
+/* ---------- Recherche ---------- */
+var VIEWBOX = "15.1298,-4.3398,15.4084,-4.6489";
+$("#f-search").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var q = $("#q").value.trim(), box = $("#results");
+  if (!q) return;
+  var m = q.match(/^\s*(-?\d+(?:[.,]\d+)?)\s*[,; ]\s*(-?\d+(?:[.,]\d+)?)\s*$/);
+  if (m) {
+    var a = parseFloat(m[1].replace(",", ".")), b = parseFloat(m[2].replace(",", "."));
+    var lat = Math.abs(a) < 10 && Math.abs(b) > 10 ? a : b, lon = lat === a ? b : a;
+    box.hidden = true; map.flyTo([lat, lon], 18, {duration: 0.8}); openPlace(lat, lon, "Point GPS"); return;
+  }
+  box.hidden = false; box.innerHTML = '<p>Recherche…</p>';
+  nominatim("search?format=jsonv2&limit=15&countrycodes=cd&bounded=1&viewbox=" + VIEWBOX + "&q=" + encodeURIComponent(q)).then(function (list) {
+    var ok = list.filter(function (r) { return inCommune(+r.lat, +r.lon); });
+    if (!ok.length) { box.innerHTML = "<p>Aucun lieu de ce nom trouvé dans Mont-Ngafula sur OpenStreetMap. Essayez un nom voisin (quartier, école, église, marché) ou touchez directement la carte.</p>"; return; }
+    box.innerHTML = "";
+    ok.slice(0, 8).forEach(function (r) {
+      var parts = r.display_name.split(", "), btn = document.createElement("button");
+      btn.type = "button";
+      btn.innerHTML = "<b>" + esc(parts[0]) + "</b><small>" + esc(parts.slice(1, -3).join(", ") || "Mont-Ngafula") + "</small>";
+      btn.addEventListener("click", function () {
+        box.hidden = true;
+        var bb = r.boundingbox.map(Number), bounds = L.latLngBounds([bb[0], bb[2]], [bb[1], bb[3]]);
+        if (bounds.isValid() && (bb[1] - bb[0] > 0.002 || bb[3] - bb[2] > 0.002)) map.flyToBounds(bounds, {maxZoom: 18, duration: 0.8});
+        else map.flyTo([+r.lat, +r.lon], 18, {duration: 0.8});
+        openPlace(+r.lat, +r.lon, parts[0]);
+      });
+      box.appendChild(btn);
+    });
+  }).catch(function () { box.innerHTML = "<p>La recherche OpenStreetMap ne répond pas. Réessayez dans un instant, ou touchez la carte.</p>"; });
+});
+document.addEventListener("click", function (e) { if (!e.target.closest(".search")) $("#results").hidden = true; });
+
+/* ---------- Ma position ---------- */
+$("#b-locate").addEventListener("click", function () {
+  if (!navigator.geolocation) { toast("Votre appareil ne donne pas sa position."); return; }
+  toast("Recherche de votre position…");
+  navigator.geolocation.getCurrentPosition(function (p) {
+    var lat = p.coords.latitude, lon = p.coords.longitude;
+    if (!communeBounds.pad(0.6).contains([lat, lon])) { toast("Vous êtes hors de la zone de Mont-Ngafula."); return; }
+    map.flyTo([lat, lon], 19, {duration: 0.8}); openPlace(lat, lon, "Ma position");
+    L.circle([lat, lon], {radius: p.coords.accuracy, color: "#1F5BC4", weight: 1, fillOpacity: 0.12}).addTo(map);
+  }, function () { toast("Position refusée ou introuvable. Activez la localisation."); }, {enableHighAccuracy: true, timeout: 15000});
+});
+
+/* ---------- Prévision des 3 bassins ---------- */
+function centre(ring) { var s = [0, 0]; ring.forEach(function (p) { s[0] += p[0]; s[1] += p[1]; }); return [s[0] / ring.length, s[1] / ring.length]; }
+function renderBasins(res, info) {
+  var tot = {tou: 0, rav: 0, hab: 0}, maxN = 0, maxP = 0;
+  $("#basins").innerHTML = "";
+  B.forEach(function (b, i) {
+    var r = res[i], pe = ENS && ENS.points[i] ? ENS.points[i].pluie72 : null;
+    var g2 = r && r.gfs_seamless ? r.gfs_seamless[2] : null, e2 = r && r.ecmwf_ifs025 ? r.ecmwf_ifs025[2] : null;
+    var P = pe !== null ? pe : (g2 !== null && e2 !== null ? (g2 + e2) / 2 : (g2 !== null ? g2 : e2));
+    var card = document.createElement("article"); card.className = "basin";
+    if (P === null) {
+      b.poly.setStyle({color: "#00E5FF", fillOpacity: 0});
+      card.innerHTML = "<header><h3>" + b.nom + "</h3></header><p>Prévision " + NA + ".</p>";
+    } else {
+      var v = impacts(b, P), niv = vigilance(b, P, v); maxN = Math.max(maxN, niv); maxP = Math.max(maxP, P);
+      tot.tou += v[1]; tot.hab += v[3]; tot.rav += P >= SEUIL_RAVINE ? b.rav : 0;
+      b.poly.setStyle({color: niv ? FOND[niv] : "#00E5FF", fillOpacity: 0});
+      b.poly.setTooltipContent(b.code + " · " + NOMS[niv]);
+      card.innerHTML = "<header><h3>" + b.nom + '</h3><span class="pill v' + niv + '">' + NOMS[niv] + "</span></header><dl>" +
+        "<dt>Pluie probable 72 h" + (pe !== null ? " (≈ 120 scénarios)" : " (moyenne GFS · ECMWF)") + "</dt><dd>" + nf(P) + " mm</dd>" +
+        "<dt>Pluie 72 h (GFS · ECMWF)</dt><dd>" + (g2 !== null ? nf(g2) : "–") + " · " + (e2 !== null ? nf(e2) : "–") + " mm</dd>" +
+        "<dt>Bâtiments potentiellement touchés par l'eau</dt><dd>" + nf(v[1]) + "</dd>" +
+        "<dt>Habitants exposés à l'inondation</dt><dd>" + nf(v[3]) + "</dd>" +
+        "<dt>Bâtiments sur versants à ravines</dt><dd>" + (P >= SEUIL_RAVINE ? nf(b.rav) : "0") + "</dd></dl>" +
+        '<p class="note">' + esc(pourquoi(b, P, v, niv)) + "</p>";
+    }
+    var btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "Voir sur la carte";
+    btn.addEventListener("click", function () { $("#o-basins").checked = true; basinLayer.addTo(map); map.flyToBounds(b.poly.getBounds(), {padding: [30, 30], duration: 0.8}); window.scrollTo({top: $(".mapbox").offsetTop - 10, behavior: "smooth"}); });
+    card.appendChild(btn); $("#basins").appendChild(card);
+  });
+  $("#kpis").innerHTML = (res.some(Boolean) || ENS) ? [
+    [nf(maxP) + " mm", "pluie probable sur 72 h, bassin le plus arrosé"],
+    ['<span class="pill v' + maxN + '" style="font-size:18px">' + NOMS[maxN] + "</span>", "vigilance expérimentale la plus haute"],
+    [nf(tot.tou), "bâtiments potentiellement touchés par l'eau (3 bassins, modèle)"],
+    [nf(tot.rav), "bâtiments sur versants à ravines (3 bassins, modèle)"]
+  ].map(function (k) { return '<div class="kpi"><b>' + k[0] + "</b><span>" + k[1] + "</span></div>"; }).join("") : "";
+  $("#maj").textContent = info;
+}
+var ENS = (window.UrbanRiskVigilance && window.UrbanRiskVigilance.dernier) || null, RES = null;
+function infoMaj() {
+  var ok = (RES || []).some(Boolean);
+  if (!ok && !ENS) return "Prévision indisponible pour le moment : le service météo ne répond pas. Aucune vigilance n'est affichée.";
+  return "Prévision lue le " + new Date().toLocaleString("fr-FR", {timeZone: "Africa/Kinshasa", dateStyle: "short", timeStyle: "short"}) +
+    " (heure de Kinshasa) pour les 72 prochaines heures. " +
+    (ENS && !ENS.secours ? "Vigilance calculée sur environ 120 scénarios (ECMWF, GFS, ICON) : pluie que 4 scénarios sur 10 dépassent."
+                         : "Prévisions d'ensemble indisponibles : vigilance calculée sur la moyenne des modèles GFS et ECMWF.");
+}
+window.addEventListener("urbanrisk:vigilance", function (e) { ENS = e.detail; if (RES) renderBasins(RES, infoMaj()); });
+Promise.all(B.map(function (b) { var c = centre(b.ring); return rainAt(c[0], c[1]).catch(function () { return null; }); })).then(function (res) {
+  RES = res; renderBasins(res, infoMaj());
+});
+})();
+</script>
+<script src="assets/js/urbanrisk-direct.js"></script>
+</body>
+</html>

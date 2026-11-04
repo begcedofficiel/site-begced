@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mbongo Nzela – prototype | BEGCED</title>
+<meta name="description" content="Prototype de démonstration Mbongo Nzela de BEGCED : coordination des liquidités de monnaie mobile, secteur de Dongo (Sud-Ubangi). Données fictives.">
+<meta name="theme-color" content="#0A2A66">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/logo/favicon-32.png">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: barre d'en-tête BEGCED, onglets par rôle, écran « téléphone » pour client/agent/SMS, tableau de bord large. */
+:root{
+  --bg:#F4F7FB; --surface:#FFFFFF; --surface-2:#EEF3FA; --line:#D7DFEA;
+  --ink:#0E1B33; --muted:#55627A; --navy:#0A2A66; --accent:#1F5BC4; --accent-soft:#E3ECFB;
+  --green:#2E8A22; --green-soft:#E6F4E1; --amber:#A86400; --amber-soft:#FFF1D9; --red:#B3261E; --red-soft:#FDE7E5;
+  --gray-soft:#EEF0F3; --on-accent:#FFFFFF;
+  --f-head:"Manrope","Segoe UI",system-ui,sans-serif; --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1220; --surface:#121B2E; --surface-2:#18233A; --line:#2A3752;
+  --ink:#E8EEF8; --muted:#A5B1C6; --navy:#9DBBF2; --accent:#7EA8F0; --accent-soft:#1C2C4C;
+  --green:#7CCB6A; --green-soft:#17301A; --amber:#F2B45A; --amber-soft:#3A2A10; --red:#F28B82; --red-soft:#3D1A18;
+  --gray-soft:#1D2638; --on-accent:#0B1220; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1220; --surface:#121B2E; --surface-2:#18233A; --line:#2A3752;
+  --ink:#E8EEF8; --muted:#A5B1C6; --navy:#9DBBF2; --accent:#7EA8F0; --accent-soft:#1C2C4C;
+  --green:#7CCB6A; --green-soft:#17301A; --amber:#F2B45A; --amber-soft:#3A2A10; --red:#F28B82; --red-soft:#3D1A18;
+  --gray-soft:#1D2638; --on-accent:#0B1220; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.5;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+h1,h2,h3{font-family:var(--f-head);margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.top{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-size:26px;color:var(--navy);letter-spacing:-.01em}
+.brand span{color:var(--muted);font-size:14px}
+.clock{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.clock b{font-family:var(--f-head);color:var(--ink);font-variant-numeric:tabular-nums}
+.notice{margin:14px 0 16px;padding:10px 14px;border-radius:10px;background:var(--amber-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent);font-size:14px}
+.notice strong{color:var(--amber)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:18px}
+.tab{border:0;background:none;padding:10px 14px;font-family:var(--f-head);font-weight:700;font-size:14.5px;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer}
+.tab[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;font-weight:600;cursor:pointer;min-height:40px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:transparent}
+.btn.small{min-height:32px;padding:5px 10px;font-size:14px}
+.btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent)}
+.grid2{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(10,42,102,.08)}
+.phone h2{font-size:18px;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 12px}
+.side{min-width:0}
+.side h3{font-size:15px;margin-bottom:8px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:600;font-size:14px;margin:10px 0 4px}
+input,select{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);min-height:42px}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 6px;font-weight:600;font-size:14px;cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--navy)}
+.agent-card{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;display:grid;gap:6px}
+.agent-card .name{font-family:var(--f-head);font-weight:700}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13.5px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.pill.ok{background:var(--green-soft);color:var(--green)}
+.pill.low{background:var(--amber-soft);color:var(--amber)}
+.pill.none{background:var(--red-soft);color:var(--red)}
+.pill.stale{background:var(--gray-soft);color:var(--muted)}
+.pill.info{background:var(--accent-soft);color:var(--navy)}
+.status-line{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ref{font-family:var(--f-head);font-weight:800;letter-spacing:.04em}
+.steps{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:4px;font-size:13.5px}
+.steps li{display:flex;gap:8px;color:var(--muted)}
+.steps li.done{color:var(--ink)}
+.steps li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;margin-top:6px;background:var(--line)}
+.steps li.done::before{background:var(--accent)}
+.empty{color:var(--muted);font-size:14px;padding:8px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-head);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi b{display:block;font-family:var(--f-head);font-size:24px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--muted)}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:var(--red-soft);margin-bottom:8px;font-size:14px}
+.alert.warn{background:var(--amber-soft)}
+.alert b{font-family:var(--f-head)}
+.sms{background:var(--surface-2);border-radius:14px;padding:12px;height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:85%;padding:8px 11px;border-radius:14px;font-size:14px;white-space:pre-line}
+.bubble.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:4px}
+.bubble.sys{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:4px}
+.codes{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.decl{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.decl:last-child{border-bottom:0}
+.decl .net{font-weight:700}
+.tiny{font-size:12.5px;color:var(--muted)}
+.hr{height:1px;background:var(--line);margin:12px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--navy);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:no-preference){.btn,.tab,.seg button{transition:background .15s,border-color .15s,color .15s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Mbongo Nzela</h1><span>Prototype BEGCED · secteur de Dongo → Gemena et Kinshasa</span></div>
+    <div class="clock">Heure simulée <b id="clock">08:00</b>
+      <button class="btn small" id="plus30" type="button">+30 min</button>
+      <button class="btn small ghost" id="reset" type="button">Réinitialiser</button></div>
+  </header>
+  <p class="notice"><strong>Démonstration.</strong> Dans les onglets ci-dessous, agents et montants fictifs (seule la section « Liquidité des villages », en bas de page, reçoit les états réels des agents pilotes), aucun argent n'est déplacé et aucun réseau n'est connecté. BEGCED ne demande jamais votre code PIN.</p>
+
+  <nav class="tabs" role="tablist" aria-label="Rôles">
+    <button class="tab" role="tab" id="t-client" aria-selected="true" aria-controls="v-client">Client</button>
+    <button class="tab" role="tab" id="t-agent" aria-selected="false" aria-controls="v-agent">Agent</button>
+    <button class="tab" role="tab" id="t-sms" aria-selected="false" aria-controls="v-sms">Par SMS</button>
+    <button class="tab" role="tab" id="t-dash" aria-selected="false" aria-controls="v-dash">Tableau de bord</button>
+  </nav>
+
+  <!-- CLIENT -->
+  <section id="v-client" role="tabpanel" aria-labelledby="t-client">
+    <div class="grid2">
+      <div class="phone">
+        <h2>Trouver un agent qui peut me servir</h2>
+        <p class="sub">Nous cherchons un agent qui a déclaré assez de float ou d'espèces dans votre village.</p>
+        <form id="req-form">
+          <label>Je veux</label>
+          <div class="seg" id="op-seg">
+            <button type="button" data-op="envoi" aria-pressed="true">Envoyer de l'argent</button>
+            <button type="button" data-op="retrait" aria-pressed="false">Retirer de l'argent reçu</button>
+          </div>
+          <div class="row">
+            <div><label for="amount">Montant (FC)</label><input id="amount" type="number" min="1000" step="500" value="50000" inputmode="numeric"></div>
+            <div><label for="network">Réseau</label><select id="network"></select></div>
+          </div>
+          <div class="row">
+            <div><label for="village">Mon village</label><select id="village"></select></div>
+            <div id="dest-wrap"><label for="dest">Destination</label><select id="dest"><option>Kinshasa</option><option>Gemena</option></select></div>
+          </div>
+          <label for="urgency">Urgence</label>
+          <select id="urgency"><option value="normale">Normale</option><option value="urgente">Urgente</option><option value="medicale">Urgence médicale</option></select>
+          <div style="margin-top:14px"><button class="btn primary" type="submit" style="width:100%">Chercher un agent</button></div>
+        </form>
+        <div id="results"></div>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <h3>Mes demandes</h3>
+          <div id="my-requests"><p class="empty">Aucune demande pour l'instant.</p></div>
+        </div>
+        <div class="panel tiny">
+          Les frais sont ceux de l'opérateur, selon sa grille officielle ; le prototype ne les calcule pas. Une demande enregistrée n'est jamais un transfert terminé : seul l'agent exécute l'opération, sur le réseau de l'opérateur.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENT -->
+  <section id="v-agent" role="tabpanel" aria-labelledby="t-agent" hidden>
+    <div class="grid2">
+      <div class="phone">
+        <label for="agent-pick" style="margin-top:0">Je suis l'agent</label>
+        <select id="agent-pick"></select>
+        <div class="hr"></div>
+        <h2>Mes disponibilités</h2>
+        <p class="sub">Indiquez une tranche, pas un montant exact. Une déclaration devient « à confirmer » après 2 h et disparaît après 4 h.</p>
+        <div id="agent-decl"></div>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <h3>Clients orientés vers moi</h3>
+          <div id="agent-requests"></div>
+        </div>
+        <div class="panel" id="agent-stats"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SMS -->
+  <section id="v-sms" role="tabpanel" aria-labelledby="t-sms" hidden>
+    <div class="grid2">
+      <div class="phone">
+        <h2>Simulateur SMS</h2>
+        <p class="sub">Pour les téléphones simples. Écrivez un message comme si vous l'envoyiez au numéro du service.</p>
+        <label for="sms-as" style="margin-top:0">J'écris en tant que</label>
+        <select id="sms-as"></select>
+        <div class="sms" id="sms-log" aria-live="polite" style="margin-top:10px"></div>
+        <form id="sms-form" class="row" style="margin-top:10px">
+          <input id="sms-input" autocomplete="off" placeholder="Ex. : FLOAT MPESA OK" aria-label="Message SMS">
+          <button class="btn primary" type="submit" style="flex:0 0 auto">Envoyer</button>
+        </form>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <h3>Messages compris par le service</h3>
+          <table class="codes">
+            <tr><th>Message</th><th>Effet</th></tr>
+            <tr><td>FLOAT MPESA OK</td><td>Agent : float M-Pesa supérieur à 200 000 FC</td></tr>
+            <tr><td>FLOAT AIRTEL BAS</td><td>Agent : float Airtel inférieur à 50 000 FC</td></tr>
+            <tr><td>FLOAT ORANGE ZERO</td><td>Agent : plus de float Orange</td></tr>
+            <tr><td>CASH OK · CASH BAS · CASH ZERO</td><td>Agent : niveau d'espèces</td></tr>
+            <tr><td>ENVOI 50000 MPESA</td><td>Client : chercher un agent pour envoyer</td></tr>
+            <tr><td>RETRAIT 30000 AIRTEL</td><td>Client : chercher un agent pour retirer</td></tr>
+            <tr><td>AIDE</td><td>Liste des commandes</td></tr>
+          </table>
+          <p class="tiny">Réseaux : MPESA, AIRTEL, ORANGE, AFRI. Le village est celui du numéro enregistré.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="v-dash" role="tabpanel" aria-labelledby="t-dash" hidden>
+    <div class="kpis" id="kpis"></div>
+    <div class="panel"><h3 style="margin-bottom:10px">Alertes de rupture</h3><div id="alerts"></div></div>
+    <div class="panel">
+      <h3 style="margin-bottom:10px">Disponibilités déclarées par village</h3>
+      <div class="tablewrap"><table id="board"></table></div>
+      <p class="tiny" style="margin-top:8px">Float = monnaie électronique de l'agent. Fiabilité = part des orientations confirmées comme exécutées.</p>
+    </div>
+  </section>
+</div>
+<div id="mn-liquidite"></div>
+<footer class="wrap tiny" style="padding-top:0">© 2026 BEGCED – Mbongo Nzela est un concept et un nom de BEGCED. Prototype de démonstration, version du 21 octobre 2026. <a href='/' style='color:var(--accent)'>Retour au site BEGCED</a></footer>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const NETS={MPESA:"M-Pesa",AIRTEL:"Airtel Money",ORANGE:"Orange Money",AFRI:"Afrimoney"};
+const VILLAGES=["Dongo","Imesse","Inyele","Bokona"];
+const BANDS=[{k:0,t:"Aucun"},{k:1,t:"< 50 000 FC",max:50000},{k:2,t:"50 000 – 200 000 FC",max:200000},{k:3,t:"> 200 000 FC",max:Infinity}];
+const FRESH=120, EXPIRE=240;
+let S;
+
+function seed(){
+  // Données fictives de démonstration
+  return {now:8*60, seq:1,
+    agents:[
+      {id:"A01",name:"Point Marché Dongo",village:"Dongo",phone:"+243 8xx xxx 101",ok:11,ko:1,
+        d:{MPESA:{f:3,c:2,t:450},AIRTEL:{f:1,c:2,t:450}}},
+      {id:"A02",name:"Point Port Dongo",village:"Dongo",phone:"+243 8xx xxx 102",ok:7,ko:1,
+        d:{ORANGE:{f:2,c:1,t:430},MPESA:{f:1,c:1,t:300}}},
+      {id:"A03",name:"Point Imesse Centre",village:"Imesse",phone:"+243 8xx xxx 103",ok:6,ko:2,
+        d:{MPESA:{f:0,c:3,t:460},AIRTEL:{f:0,c:3,t:460}}},
+      {id:"A04",name:"Point Inyele Carrefour",village:"Inyele",phone:"+243 8xx xxx 104",ok:9,ko:0,
+        d:{AIRTEL:{f:2,c:2,t:440},MPESA:{f:1,c:2,t:440}}},
+      {id:"A05",name:"Point Bokona Église",village:"Bokona",phone:"+243 8xx xxx 105",ok:4,ko:1,
+        d:{MPESA:{f:2,c:1,t:330}}},
+      {id:"A06",name:"Point Bokona École",village:"Bokona",phone:"+243 8xx xxx 106",ok:3,ko:3,
+        d:{AFRI:{f:0,c:1,t:455},ORANGE:{f:1,c:1,t:455}}}
+    ].map(a=>{Object.values(a.d).forEach(x=>x.t=x.t);return a;}),
+    requests:[], alertsAck:{}, sms:[], smsAs:"A01"};
+}
+// t = minutes depuis minuit (08:00 = 480). Valeurs initiales relatives à 08:00.
+function initTimes(st){st.agents.forEach(a=>Object.values(a.d).forEach(x=>{x.t=x.t+ (480-480);}));return st;}
+
+const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hhmm=m=>{m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");};
+const fc=n=>Number(n).toLocaleString("fr-FR")+" FC";
+const age=t=>S.now-t;
+const ageTxt=t=>{const a=age(t);return a<1?"à l'instant":a<60?`il y a ${a} min`:`il y a ${Math.floor(a/60)} h ${String(a%60).padStart(2,"0")}`;};
+const freshness=t=>age(t)<FRESH?"fresh":age(t)<EXPIRE?"stale":"expired";
+const rel=a=>{const n=a.ok+a.ko;return n?Math.round(100*a.ok/n):null;};
+const bandOk=(band,amount)=>band>0 && amount<= (band===1?50000:band===2?200000:Infinity) && !(band===1 && amount>50000);
+// Une tranche « < 50 000 » ne permet que les montants < 50 000 ; une tranche « 50 000 – 200 000 » ne garantit que jusqu'à 50 000 au minimum : on reste prudent.
+const canServe=(band,amount)=>band===3?true:band===2?amount<=50000:band===1?amount<=10000:false;
+
+function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2600);}
+function pill(cls,t){return `<span class="pill ${cls}">${esc(t)}</span>`;}
+function levelPill(band,t){const f=freshness(t);if(f==="expired")return pill("stale","Expiré");const base=band===0?pill("none","Rupture"):band===1?pill("low","Bas"):pill("ok",band===2?"Moyen":"Élevé");return f==="stale"?base+" "+pill("stale","À confirmer"):base;}
+
+/* ---------- Tabs ---------- */
+const TABS=["client","agent","sms","dash"];
+function showTab(k){TABS.forEach(x=>{$("#t-"+x).setAttribute("aria-selected",String(x===k));$("#v-"+x).hidden=x!==k;});render();}
+TABS.forEach(k=>$("#t-"+k).addEventListener("click",()=>showTab(k)));
+
+/* ---------- Client ---------- */
+let op="envoi";
+$("#op-seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;op=b.dataset.op;
+  [...$("#op-seg").children].forEach(x=>x.setAttribute("aria-pressed",String(x===b)));$("#dest-wrap").hidden=op!=="envoi";});
+function fillSelects(){
+  $("#network").innerHTML=Object.entries(NETS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+  $("#village").innerHTML=VILLAGES.map(v=>`<option>${v}</option>`).join("");
+  $("#agent-pick").innerHTML=S.agents.map(a=>`<option value="${a.id}">${esc(a.name)} (${a.village})</option>`).join("");
+  $("#sms-as").innerHTML=S.agents.map(a=>`<option value="${a.id}">Agent ${esc(a.name)}</option>`).join("")+VILLAGES.map(v=>`<option value="C:${v}">Client à ${v}</option>`).join("");
+  $("#sms-as").value=S.smsAs;
+}
+function candidates(village,net,kind,amount){
+  return S.agents.filter(a=>a.village===village&&a.d[net]).map(a=>({a,x:a.d[net]}))
+    .filter(({x})=>freshness(x.t)!=="expired" && canServe(kind==="envoi"?x.f:x.c,amount))
+    .sort((p,q)=>(freshness(p.x.t)==="fresh"?0:1)-(freshness(q.x.t)==="fresh"?0:1)||(rel(q.a)||0)-(rel(p.a)||0)).slice(0,2);
+}
+function alternatives(village,net,kind,amount){
+  const alts=[];
+  Object.keys(NETS).filter(n=>n!==net).forEach(n=>{if(candidates(village,n,kind,amount).length)alts.push(`un agent ${NETS[n]} à ${village}`);});
+  VILLAGES.filter(v=>v!==village).forEach(v=>{if(candidates(v,net,kind,amount).length)alts.push(`un agent ${NETS[net]} à ${v}`);});
+  return alts;
+}
+function newRequest(o){const r={id:"MBZ-"+String(1000+S.seq++),...o,created:S.now,status:"registered",log:[{s:"registered",t:S.now}],agent:null};S.requests.unshift(r);return r;}
+function setStatus(r,s,extra){r.status=s;r.log.push({s,t:S.now,...(extra||{})});}
+const ST={registered:"Demande enregistrée",waiting:"En attente de liquidité",available:"Agent disponible – à confirmer",oriented:"Orientée",done:"Exécutée (confirmée)",failed:"Échouée",cancelled:"Annulée",claim:"En réclamation"};
+const STC={registered:"info",waiting:"low",available:"ok",oriented:"info",done:"ok",failed:"none",cancelled:"stale",claim:"low"};
+
+$("#req-form").addEventListener("submit",e=>{
+  e.preventDefault();
+  const amount=Number($("#amount").value);
+  if(!amount||amount<1000){toast("Indiquez un montant d'au moins 1 000 FC.");$("#amount").focus();return;}
+  const r=newRequest({kind:op,amount,net:$("#network").value,village:$("#village").value,dest:op==="envoi"?$("#dest").value:null,urgency:$("#urgency").value,channel:"web"});
+  showResults(r);render();
+});
+function showResults(r){
+  const c=candidates(r.village,r.net,r.kind,r.amount);
+  const what=r.kind==="envoi"?`envoyer ${fc(r.amount)} vers ${r.dest}`:`retirer ${fc(r.amount)}`;
+  let h=`<div class="hr"></div><div class="status-line"><span class="ref">${r.id}</span>${pill("info",ST.registered)}</div><p class="sub" style="margin-top:6px">Pour ${what} sur ${NETS[r.net]} à ${r.village} :</p>`;
+  if(c.length){
+    h+=c.map(({a,x})=>`<div class="agent-card"><div class="name">${esc(a.name)}</div>
+      <div class="meta"><span>${r.kind==="envoi"?"Float":"Espèces"} : ${levelPill(r.kind==="envoi"?x.f:x.c,x.t)}</span><span>Déclaré ${ageTxt(x.t)}</span><span>Fiabilité ${rel(a)??"–"} %</span></div>
+      <button class="btn small primary" data-pick="${a.id}" data-req="${r.id}" type="button">Aller chez cet agent</button></div>`).join("");
+  } else {
+    setStatus(r,"waiting");
+    const alts=alternatives(r.village,r.net,r.kind,r.amount);
+    h=h.replace(pill("info",ST.registered),pill("low",ST.waiting));
+    h+=`<div class="alert warn"><div><b>Aucun agent n'a déclaré assez de ${r.kind==="envoi"?"float":"liquidités"} ${NETS[r.net]} à ${r.village}.</b><br>
+      Votre demande est en attente : vous serez prévenu dès qu'un agent déclare du ${r.kind==="envoi"?"float":"cash"}. Nous ne pouvons pas garantir de délai.
+      ${alts.length?`<br>Possible dès maintenant : ${alts.slice(0,3).map(esc).join(" ; ")}.`:""}</div></div>
+      <p class="tiny">Le distributeur a été alerté de la rupture.</p>`;
+  }
+  $("#results").innerHTML=h;
+}
+$("#results").addEventListener("click",e=>{const b=e.target.closest("[data-pick]");if(!b)return;
+  const r=S.requests.find(x=>x.id===b.dataset.req);r.agent=b.dataset.pick;setStatus(r,"oriented",{agent:r.agent});
+  const a=S.agents.find(x=>x.id===r.agent);
+  $("#results").innerHTML=`<div class="hr"></div><div class="status-line"><span class="ref">${r.id}</span>${pill("info",ST.oriented)}</div>
+   <p style="margin:8px 0 0">Présentez le code <b class="ref">${r.id}</b> à <b>${esc(a.name)}</b> (${a.village}).<br><span class="tiny">L'agent exécute l'opération sur ${NETS[r.net]}. Vous seul saisissez votre code PIN, sur votre téléphone.</span></p>`;
+  render();toast("Orientation envoyée à l'agent.");});
+
+function stepsFor(r){
+  const order=["registered","oriented","done"];
+  const seen=new Set(r.log.map(l=>l.s));
+  let h=order.map(s=>`<li class="${seen.has(s)?"done":""}">${ST[s]}${seen.has(s)?` · ${hhmm(r.log.find(l=>l.s===s).t)}`:""}</li>`).join("");
+  ["waiting","available","failed","cancelled","claim"].forEach(s=>{if(seen.has(s))h+=`<li class="done">${ST[s]} · ${hhmm(r.log.filter(l=>l.s===s).at(-1).t)}</li>`;});
+  return `<ul class="steps">${h}</ul>`;
+}
+function renderMyRequests(){
+  const el=$("#my-requests");const mine=S.requests.filter(r=>r.channel!=="sms-agent");
+  if(!mine.length){el.innerHTML='<p class="empty">Aucune demande pour l\'instant.</p>';return;}
+  el.innerHTML=mine.map(r=>{const a=r.agent&&S.agents.find(x=>x.id===r.agent);
+    const act=r.status==="available"?`<button class="btn small primary" data-retry="${r.id}" type="button">Voir l'agent disponible</button>`:
+      (["registered","waiting","oriented"].includes(r.status)?`<button class="btn small ghost" data-cancel="${r.id}" type="button">Annuler</button>`:"")+
+      (["done","failed"].includes(r.status)?`<button class="btn small ghost" data-claim="${r.id}" type="button">Signaler un problème</button>`:"");
+    return `<div class="agent-card"><div class="status-line"><span class="ref">${r.id}</span>${pill(STC[r.status],ST[r.status])}</div>
+      <div class="meta"><span>${r.kind==="envoi"?"Envoi vers "+r.dest:"Retrait"}</span><span>${fc(r.amount)}</span><span>${NETS[r.net]}</span><span>${r.village}</span>${r.urgency!=="normale"?`<span>${r.urgency==="medicale"?"Urgence médicale":"Urgent"}</span>`:""}${a?`<span>${esc(a.name)}</span>`:""}</div>
+      ${stepsFor(r)}${r.opRef?`<div class="tiny">Réf. opérateur : ${esc(r.opRef)}</div>`:""}<div class="row" style="flex-wrap:wrap">${act}</div></div>`;}).join("");
+}
+$("#my-requests").addEventListener("click",e=>{
+  const id=(e.target.closest("[data-retry],[data-cancel],[data-claim]")||{}).dataset;if(!id)return;
+  const r=S.requests.find(x=>x.id===(id.retry||id.cancel||id.claim));
+  if(id.cancel){setStatus(r,"cancelled");toast("Demande annulée.");}
+  if(id.claim){setStatus(r,"claim");toast("Réclamation enregistrée. Réponse sous 48 h.");}
+  if(id.retry){showTab("client");showResults(r);}
+  render();});
+
+/* ---------- Agent ---------- */
+function currentAgent(){return S.agents.find(a=>a.id===$("#agent-pick").value)||S.agents[0];}
+$("#agent-pick").addEventListener("change",render);
+function declare(a,net,field,band){
+  if(!a.d[net])a.d[net]={f:0,c:0,t:S.now};
+  a.d[net][field]=band;a.d[net].t=S.now;
+  // Prévenir les clients en attente
+  S.requests.filter(r=>r.status==="waiting"&&r.village===a.village&&r.net===net&&canServe(r.kind==="envoi"?a.d[net].f:a.d[net].c,r.amount))
+    .forEach(r=>setStatus(r,"available",{agent:a.id}));
+}
+function renderAgent(){
+  const a=currentAgent();
+  $("#agent-decl").innerHTML=Object.keys(NETS).map(n=>{const x=a.d[n];
+    const seg=(field)=>`<div class="seg" role="group" aria-label="${field==="f"?"Float":"Espèces"} ${NETS[n]}">${BANDS.map(b=>`<button type="button" data-net="${n}" data-field="${field}" data-band="${b.k}" aria-pressed="${x&&x[field]===b.k&&freshness(x.t)!=="expired"}">${b.t}</button>`).join("")}</div>`;
+    return `<div class="decl"><div><div class="net">${NETS[n]}</div><div class="tiny">${x?ageTxt(x.t):"jamais déclaré"}</div></div>
+      <div style="min-width:0"><div class="tiny">Float</div>${seg("f")}<div class="tiny" style="margin-top:6px">Espèces</div>${seg("c")}</div></div>`;}).join("");
+  const reqs=S.requests.filter(r=>r.agent===a.id&&r.status==="oriented");
+  $("#agent-requests").innerHTML=reqs.length?reqs.map(r=>`<div class="agent-card"><div class="status-line"><span class="ref">${r.id}</span>${pill("info",r.kind==="envoi"?"Envoi vers "+r.dest:"Retrait")}</div>
+    <div class="meta"><span>${fc(r.amount)}</span><span>${NETS[r.net]}</span><span>orienté à ${hhmm(r.log.at(-1).t)}</span></div>
+    <label for="opref-${r.id}" class="tiny" style="font-weight:600">Référence de transaction de l'opérateur</label>
+    <input id="opref-${r.id}" placeholder="Ex. : RX7K2P9" autocomplete="off">
+    <div class="row" style="flex-wrap:wrap;margin-top:6px"><button class="btn small primary" type="button" data-done="${r.id}">Opération exécutée</button>
+    <button class="btn small danger" type="button" data-fail="${r.id}">Je n'avais pas assez</button></div></div>`).join(""):'<p class="empty">Aucun client orienté vers vous pour le moment.</p>';
+  $("#agent-stats").innerHTML=`<h3>Ma fiabilité : ${rel(a)??"–"} %</h3><p class="tiny" style="margin:6px 0 0">${a.ok} orientations confirmées, ${a.ko} refus signalés. Un agent qui déclare souvent du float inexistant est averti, puis retiré de la carte.</p><p class="tiny">Rappel : ne communiquez jamais votre code PIN ni celui d'un client. BEGCED ne vous le demandera jamais.</p>`;
+}
+$("#agent-decl").addEventListener("click",e=>{const b=e.target.closest("[data-band]");if(!b)return;
+  declare(currentAgent(),b.dataset.net,b.dataset.field,Number(b.dataset.band));render();toast("Disponibilité mise à jour à "+hhmm(S.now)+".");});
+$("#agent-requests").addEventListener("click",e=>{const b=e.target.closest("[data-done],[data-fail]");if(!b)return;
+  const a=currentAgent();
+  if(b.dataset.done){const r=S.requests.find(x=>x.id===b.dataset.done);const v=($("#opref-"+r.id).value||"").trim();
+    if(v.length<4){toast("Saisissez la référence de l'opérateur (4 caractères au moins).");$("#opref-"+r.id).focus();return;}
+    r.opRef=v;setStatus(r,"done");a.ok++;
+    const x=a.d[r.net];if(x){x.t=S.now;}
+    toast("Opération confirmée. Le client est prévenu.");}
+  else{const r=S.requests.find(x=>x.id===b.dataset.fail);setStatus(r,"failed");a.ko++;
+    const x=a.d[r.net];if(x){if(r.kind==="envoi")x.f=0;else x.c=0;x.t=S.now;}
+    toast("Refus enregistré. Votre déclaration est passée en rupture.");}
+  render();});
+
+/* ---------- SMS ---------- */
+$("#sms-as").addEventListener("change",e=>{S.smsAs=e.target.value;renderSms();});
+function smsReply(from,txt){
+  const w=txt.trim().toUpperCase().split(/\s+/);const lvl={OK:3,BAS:1,ZERO:0};
+  if(!w[0])return "Message vide. Envoyez AIDE.";
+  if(w[0]==="AIDE")return from.startsWith("C:")?"ENVOI <montant> <réseau>\nRETRAIT <montant> <réseau>\nRéseaux : MPESA AIRTEL ORANGE AFRI":"FLOAT <réseau> OK|BAS|ZERO\nCASH OK|BAS|ZERO\nRéseaux : MPESA AIRTEL ORANGE AFRI";
+  if(!from.startsWith("C:")){
+    const a=S.agents.find(x=>x.id===from);
+    if(w[0]==="FLOAT"&&NETS[w[1]]&&w[2] in lvl){declare(a,w[1],"f",lvl[w[2]]);return `Merci. Float ${NETS[w[1]]} : ${BANDS[lvl[w[2]]].t} (${hhmm(S.now)}). Valable 2 h.`;}
+    if(w[0]==="CASH"&&w[1] in lvl){Object.keys(a.d).forEach(n=>declare(a,n,"c",lvl[w[1]]));return `Merci. Espèces : ${BANDS[lvl[w[1]]].t} (${hhmm(S.now)}).`;}
+    return "Commande non reconnue. Envoyez AIDE.";
+  }
+  const village=from.slice(2);
+  if((w[0]==="ENVOI"||w[0]==="RETRAIT")&&Number(w[1])>=1000&&NETS[w[2]]){
+    const kind=w[0]==="ENVOI"?"envoi":"retrait",amount=Number(w[1]);
+    const r=newRequest({kind,amount,net:w[2],village,dest:kind==="envoi"?"Kinshasa":null,urgency:"normale",channel:"sms"});
+    const c=candidates(village,w[2],kind,amount);
+    if(c.length){r.agent=c[0].a.id;setStatus(r,"oriented",{agent:r.agent});return `${r.id} : allez chez ${c[0].a.name} (${village}). Déclaré ${ageTxt(c[0].x.t)}. Ne donnez jamais votre PIN.`;}
+    setStatus(r,"waiting");return `${r.id} : aucun agent ${NETS[w[2]]} disponible à ${village} pour l'instant. Nous vous préviendrons par SMS. Délai non garanti.`;
+  }
+  return "Commande non reconnue. Envoyez AIDE.";
+}
+$("#sms-form").addEventListener("submit",e=>{e.preventDefault();const v=$("#sms-input").value;if(!v.trim())return;
+  S.sms.push({from:S.smsAs,me:true,t:v});S.sms.push({from:S.smsAs,me:false,t:smsReply(S.smsAs,v)});$("#sms-input").value="";render();});
+function renderSms(){const log=S.sms.filter(m=>m.from===S.smsAs);
+  $("#sms-log").innerHTML=log.length?log.map(m=>`<div class="bubble ${m.me?"me":"sys"}">${esc(m.t)}</div>`).join(""):'<div class="bubble sys">Bienvenue sur Mbongo Nzela. Envoyez AIDE pour la liste des commandes.</div>';
+  $("#sms-log").scrollTop=1e6;}
+
+/* ---------- Dashboard ---------- */
+function renderDash(){
+  const rq=S.requests, oriented=rq.filter(r=>r.log.some(l=>l.s==="oriented")), done=rq.filter(r=>r.status==="done"), failed=rq.filter(r=>r.status==="failed");
+  const decls=S.agents.flatMap(a=>Object.values(a.d)), fresh=decls.filter(x=>freshness(x.t)==="fresh").length;
+  const closed=done.length+failed.length;
+  $("#kpis").innerHTML=[
+    [rq.length,"demandes reçues"],
+    [closed?Math.round(100*done.length/closed)+" %":"–","orientations réussies"],
+    [rq.filter(r=>r.status==="waiting").length,"en attente de liquidité"],
+    [decls.length?Math.round(100*fresh/decls.length)+" %":"–","déclarations de moins de 2 h"]
+  ].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
+  // Alertes : villages × réseau où aucun agent n'a de float frais
+  const al=[];
+  VILLAGES.forEach(v=>Object.keys(NETS).forEach(n=>{
+    const ag=S.agents.filter(a=>a.village===v&&a.d[n]);if(!ag.length)return;
+    const any=ag.some(a=>a.d[n].f>0&&freshness(a.d[n].t)!=="expired");
+    const waiting=rq.filter(r=>r.status==="waiting"&&r.village===v&&r.net===n).length;
+    if(!any)al.push({v,n,waiting,crit:true});
+    else if(ag.every(a=>a.d[n].f<=1||freshness(a.d[n].t)==="expired"))al.push({v,n,waiting,crit:false});
+  }));
+  $("#alerts").innerHTML=al.length?al.map(x=>`<div class="alert ${x.crit?"":"warn"}"><div><b>${x.crit?"Rupture":"Float bas"} ${NETS[x.n]} à ${x.v}</b><br><span class="tiny">${x.waiting?`${x.waiting} demande(s) en attente. `:""}Alerte transmise au distributeur partenaire (simulation).</span></div></div>`).join(""):'<p class="empty">Aucune rupture signalée.</p>';
+  const rows=S.agents.map(a=>`<tr><td><b>${esc(a.name)}</b><div class="tiny">${a.village}</div></td>${Object.keys(NETS).map(n=>{const x=a.d[n];return `<td>${x?`<div>Float ${levelPill(x.f,x.t)}</div><div style="margin-top:4px">Cash ${levelPill(x.c,x.t)}</div><div class="tiny">${ageTxt(x.t)}</div>`:'<span class="tiny">–</span>'}</td>`;}).join("")}<td>${rel(a)??"–"} %</td></tr>`).join("");
+  $("#board").innerHTML=`<thead><tr><th>Agent</th>${Object.values(NETS).map(n=>`<th>${n}</th>`).join("")}<th>Fiabilité</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+/* ---------- Clock & render ---------- */
+$("#plus30").addEventListener("click",()=>{S.now+=30;render();toast("Il est "+hhmm(S.now)+". Les anciennes déclarations vieillissent.");});
+$("#reset").addEventListener("click",()=>{S=initTimes(seed());fillSelects();$("#results").innerHTML="";render();toast("Démonstration réinitialisée.");});
+function render(){$("#clock").textContent=hhmm(S.now);renderMyRequests();renderAgent();renderSms();renderDash();}
+
+S=initTimes(seed());fillSelects();render();
+})();
+</script>
+
+<script src="assets/js/mbongo-liquidite.js"></script>
+</body>
+</html>
