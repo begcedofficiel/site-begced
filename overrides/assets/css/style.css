@@ -500,3 +500,8 @@ ul { padding-left: 1.2em; }
 @media (max-width: 860px) { .org-list-3 { grid-template-columns: 1fr; } }
 .org-ing::before { display: none; }
 .filters[hidden], .filter-status[hidden] { display: none; }
+
+/* Cartes et graphiques : afficher en entier, sans recadrage */
+.ph.fit a { background: #fff; }
+.ph.fit img { object-fit: contain; padding: 6px; }
+@media (hover: hover) and (pointer: fine) { .ph.fit a:hover img { transform: none; } }
