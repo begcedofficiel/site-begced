@@ -69,8 +69,9 @@
   if (org && EQ.organigramme.direction) {
     var O = EQ.organigramme;
     var noeud = function (d, cls) {
-      var m = membre(d.membre) || { id: "", nom: "Poste à pourvoir", photo: SILHOUETTE };
-      return '<a class="org-node ' + (cls || "") + '" href="#' + esc(m.id) + '">' +
+      var m = membre(d.membre) || { id: "", nom: "Recrutement en cours", photo: SILHOUETTE };
+      var lien = m.id ? "#" + esc(m.id) : "https://wa.me/243898929192?text=" + encodeURIComponent("Bonjour BEGCED, je souhaite postuler au poste : " + d.departement);
+      return '<a class="org-node ' + (cls || "") + '" href="' + lien + '"' + (m.id ? "" : ' target="_blank" rel="noopener" title="Postuler sur WhatsApp"') + '>' +
         '<span class="org-avatar">' + photoTag(m) + "</span>" +
         '<span class="org-txt"><span class="org-dept">' + esc(d.departement) + '</span><span class="org-name">' + esc(m.nom) + "</span></span></a>";
     };
