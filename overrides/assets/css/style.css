@@ -505,3 +505,9 @@ ul { padding-left: 1.2em; }
 .ph.fit a { background: #fff; }
 .ph.fit img { object-fit: contain; padding: 6px; }
 @media (hover: hover) and (pointer: fine) { .ph.fit a:hover img { transform: none; } }
+
+/* Vidéos de modélisation 3D */
+.gal-videos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:16px}
+.gal-videos .vid{margin:0}
+.gal-videos video{width:100%;aspect-ratio:16/10;object-fit:contain;background:#f1f3f6;border-radius:12px;display:block}
+.gal-videos figcaption{font-size:.9rem;margin-top:6px;opacity:.85}
