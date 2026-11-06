@@ -50,38 +50,11 @@ window.BEGCED_EQUIPE = {
       bio: ""
     },
     {
-      id: "melina-bokwe",
-      nom: "Mélina BOKWE",
-      photo: "assets/img/equipe/melina-bokwe.jpg",
-      postes: [
-        { fonction: "Responsable du département Environnement", departement: "Environnement", responsabilites: "Évaluations d’impact, audits et conservation." }
-      ],
-      bio: ""
-    },
-    {
-      id: "christian-kalala",
-      nom: "Christian KALALA",
-      photo: "assets/img/equipe/christian-kalala.jpg",
-      postes: [
-        { fonction: "Responsable du département Recherche et formation", departement: "Recherche et formation", responsabilites: "Recherche et développement, formations et partenariats." }
-      ],
-      bio: ""
-    },
-    {
       id: "victoire-manzuku",
       nom: "Victoire MANZUKU IMBEMBE",
       photo: "assets/img/equipe/victoire-manzuku.jpg",
       postes: [
         { fonction: "Responsable Ressources humaines et logistique", departement: "Ressources humaines et logistique", responsabilites: "Gestion du personnel, logistique et moyens généraux." }
-      ],
-      bio: ""
-    },
-    {
-      id: "anne-baila",
-      nom: "Anne BAILA",
-      photo: "assets/img/equipe/anne-baila.jpg",
-      postes: [
-        { fonction: "Responsable des Affaires juridiques", departement: "Affaires juridiques", responsabilites: "Contrats, contentieux et conformité." }
       ],
       bio: ""
     },
@@ -142,12 +115,12 @@ window.BEGCED_EQUIPE = {
     techniques: [
       { departement: "Géomatique", membre: "innocent-kanda" },
       { departement: "Génie civil", membre: "eliezer-kanda" },
-      { departement: "Environnement", membre: "melina-bokwe" },
-      { departement: "Recherche et formation", membre: "christian-kalala" }
+      { departement: "Environnement", membre: "" },
+      { departement: "Recherche et formation", membre: "" }
     ],
     support: [
       { departement: "Ressources humaines et logistique", membre: "victoire-manzuku" },
-      { departement: "Affaires juridiques", membre: "anne-baila" },
+      { departement: "Affaires juridiques", membre: "" },
       { departement: "Finances et comptabilité", membre: "melanie-khiendo" },
       { departement: "Informatique (IT)", membre: "isaac-sango" }
     ],
