@@ -12,11 +12,11 @@ window.BEGCED_FORMATIONS = [
   {
     id: "sig-qgis-arcgis-gee",
     icone: "map",
-    titre: "QGIS, ArcGIS et Google Earth Engine",
-    description: "Prendre en main les principaux logiciels de SIG et la plateforme Google Earth Engine pour produire, analyser et diffuser des données géographiques.",
+    titre: "QGIS, ArcGIS Pro, Google Earth Engine et autres logiciels SIG",
+    description: "Prendre en main les principaux logiciels de SIG (QGIS, ArcGIS Pro, Global Mapper, GRASS GIS, SAGA GIS) et la plateforme Google Earth Engine pour produire, analyser et diffuser des données géographiques.",
     niveau: "",
     objectifs: ["Organiser un projet SIG et ses données", "Produire des cartes thématiques de qualité", "Traiter des images satellitaires dans Google Earth Engine"],
-    competences: ["Gestion de couches vectorielles et raster", "Mise en page cartographique", "Scripts de base dans Google Earth Engine"],
+    competences: ["Gestion de couches vectorielles et raster", "Mise en page cartographique", "Scripts de base dans Google Earth Engine", "Modèles numériques de terrain et hydrologie (Global Mapper, GRASS, SAGA)"],
     dates: "", modalites: ""
   },
   {
@@ -32,11 +32,11 @@ window.BEGCED_FORMATIONS = [
   {
     id: "analyse-spatiale-teledetection",
     icone: "layers",
-    titre: "Analyse spatiale, cartographie et télédétection (ENVI)",
-    description: "Comprendre et appliquer les méthodes d’analyse spatiale et de télédétection aux questions territoriales et environnementales, avec QGIS et le logiciel ENVI.",
+    titre: "Télédétection et analyse spatiale : ENVI, ERDAS Imagine et SNAP",
+    description: "Comprendre et appliquer les méthodes d’analyse spatiale et de télédétection aux questions territoriales et environnementales, avec ENVI, ERDAS Imagine, SNAP (images Sentinel et radar) et QGIS.",
     niveau: "",
     objectifs: ["Choisir les données et méthodes adaptées", "Classer l’occupation du sol", "Détecter et cartographier des changements"],
-    competences: ["Prétraitement d’images (ENVI)", "Classification et validation", "Analyse de changements"],
+    competences: ["Prétraitement d’images optiques et radar", "Classification et validation", "Analyse de changements"],
     dates: "", modalites: ""
   },
   {
@@ -52,20 +52,30 @@ window.BEGCED_FORMATIONS = [
   {
     id: "gps-google-earth-pro",
     icone: "pin",
-    titre: "GPS de terrain et Google Earth Pro",
+    titre: "GPS, GNSS de terrain et Google Earth Pro",
     description: "Réaliser des relevés de terrain fiables avec un GPS et les exploiter dans Google Earth Pro et les logiciels SIG.",
     niveau: "",
     objectifs: ["Configurer un GPS et enregistrer points et traces", "Transférer et contrôler les données collectées", "Visualiser, mesurer et cartographier dans Google Earth Pro"],
-    competences: ["Relevés GPS (points, traces, surfaces)", "Formats GPX et KML/KMZ", "Import dans QGIS et ArcGIS"],
+    competences: ["Relevés GPS et GNSS (points, traces, surfaces)", "Formats GPX et KML/KMZ", "Import dans QGIS et ArcGIS"],
+    dates: "", modalites: ""
+  },
+  {
+    id: "drone-photogrammetrie",
+    icone: "target",
+    titre: "Drone et photogrammétrie : Agisoft Metashape et Pix4D",
+    description: "Planifier des vols de drone et produire orthophotos, modèles numériques de terrain et nuages de points.",
+    niveau: "",
+    objectifs: ["Planifier une mission de vol", "Traiter les images avec Agisoft Metashape ou Pix4D", "Exploiter orthophotos et MNT dans un SIG"],
+    competences: ["Plan de vol et points de contrôle", "Orthophotos, MNT et nuages de points", "Intégration SIG et calcul de volumes"],
     dates: "", modalites: ""
   },
   {
     id: "spss-powerbi-sql",
     icone: "db",
-    titre: "SPSS, Power BI et bases de données SQL",
+    titre: "SPSS, Power BI et bases de données SQL (PostgreSQL/PostGIS)",
     description: "Analyser des données d’enquête, gérer des bases de données et construire des tableaux de bord pour la prise de décision.",
     niveau: "",
-    objectifs: ["Réaliser des analyses statistiques avec SPSS", "Interroger et organiser des données avec SQL", "Construire des tableaux de bord interactifs dans Power BI"],
+    objectifs: ["Réaliser des analyses statistiques avec SPSS", "Interroger et organiser des données avec SQL et PostGIS", "Construire des tableaux de bord interactifs dans Power BI"],
     competences: ["Statistiques descriptives et tests", "Requêtes SQL", "Visualisation et tableaux de bord"],
     dates: "", modalites: ""
   },
@@ -82,11 +92,31 @@ window.BEGCED_FORMATIONS = [
   {
     id: "modelisation-3d",
     icone: "cube",
-    titre: "ArchiCAD, Revit, SketchUp et Robot Structural Analysis",
-    description: "Concevoir des plans et des maquettes numériques 2D/3D de bâtiments et d’infrastructures, puis calculer leurs structures avec Robot Structural Analysis.",
+    titre: "AutoCAD, Civil 3D, Covadis, ArchiCAD, Revit et SketchUp",
+    description: "Dessiner des plans et concevoir des maquettes numériques 2D/3D de bâtiments, de routes et de réseaux (BIM).",
     niveau: "",
-    objectifs: ["Dessiner des plans techniques", "Construire une maquette 3D", "Comprendre les principes du BIM", "Modéliser et calculer une structure"],
-    competences: ["Modélisation 2D/3D", "Production de plans", "Échanges de maquettes numériques"],
+    objectifs: ["Dessiner des plans techniques avec AutoCAD", "Concevoir routes, plateformes et terrassements avec Civil 3D et Covadis", "Construire une maquette BIM avec Revit ou ArchiCAD"],
+    competences: ["Dessin technique 2D (AutoCAD)", "Topographie, profils et cubatures (Civil 3D, Covadis)", "Modélisation 3D et BIM (Revit, ArchiCAD, SketchUp)"],
+    dates: "", modalites: ""
+  },
+  {
+    id: "calcul-structures",
+    icone: "building",
+    titre: "Calcul de structures : Robot Structural Analysis, ETABS, SAP2000 et Tekla",
+    description: "Modéliser, calculer et dimensionner les structures en béton armé et en acier selon les normes en vigueur.",
+    niveau: "",
+    objectifs: ["Modéliser une structure et ses charges", "Calculer et dimensionner poteaux, poutres, dalles et fondations", "Produire les plans de ferraillage et notes de calcul"],
+    competences: ["Robot Structural Analysis", "ETABS et SAP2000", "Détails et ferraillage (Tekla Structures)"],
+    dates: "", modalites: ""
+  },
+  {
+    id: "gestion-chantier",
+    icone: "calendar",
+    titre: "Gestion de chantier : MS Project, métrés et devis",
+    description: "Planifier un chantier, estimer les quantités et les coûts, et suivre l’avancement des travaux.",
+    niveau: "",
+    objectifs: ["Planifier les travaux avec MS Project", "Réaliser métrés et devis estimatifs (Excel)", "Suivre l’avancement et les coûts d’un chantier"],
+    competences: ["Planning et diagramme de Gantt", "Métrés, devis et bordereaux de prix", "Suivi et rapports de chantier"],
     dates: "", modalites: ""
   },
   {
