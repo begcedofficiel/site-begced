@@ -55,8 +55,8 @@
   }
 
   function lienSignalement(lat, lon) {
-    var txt = "Signalement UrbanRisk – inondation / érosion à Mont-Ngafula.\n" +
-      "Quartier / avenue : \nCe que je vois (eau dans la rue, maison touchée, ravine qui avance) : \n" +
+    var txt = "Signalement UrbanRisk à Mont-Ngafula (inondation, érosion, caniveau bouché ou cassé, route dégradée, poubelle pleine, dépôt de déchets).\n" +
+      "Quartier / avenue : \nCe que je vois : \n" +
       (lat ? "Position : https://www.openstreetmap.org/?mlat=" + lat.toFixed(5) + "&mlon=" + lon.toFixed(5) + "#map=17/" + lat.toFixed(5) + "/" + lon.toFixed(5) + "\n" : "") +
       "Je joins une photo si possible.";
     return "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(txt);
@@ -80,10 +80,10 @@
           "<label style='display:block'><input type='checkbox' data-c='orages'> Orages qui se forment</label>" +
           "<label style='display:block'><input type='checkbox' data-c='pluie'> Pluie tombée (NASA, 30 min)</label>" +
           "<small class='ur-maj' style='display:block;opacity:.75'>Images actualisées toutes les " + RAFRAICHIR_MIN + " min</small>" +
-          "<label style='display:block'><input type='checkbox' data-sig checked> Inondations signalées</label>" +
+          "<label style='display:block'><input type='checkbox' data-sig checked> Signalements des habitants</label>" +
           "<a class='ur-signal' href='" + lienSignalement() + "' target='_blank' rel='noopener' " +
           "style='display:block;margin-top:6px;background:#25D366;color:#fff;text-align:center;padding:5px;border-radius:6px;text-decoration:none;font-weight:600'>" +
-          "Signaler une inondation</a></details>";
+          "Signaler un problème</a></details>";
         L.DomEvent.disableClickPropagation(div);
         div.querySelectorAll("input[data-c]").forEach(function (box) {
           box.addEventListener("change", function () {

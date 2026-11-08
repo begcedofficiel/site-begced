@@ -1,9 +1,16 @@
 /*
- * UrbanRisk Mont-Ngafula – « Inondations signalées » (novembre 2026)
+ * UrbanRisk Mont-Ngafula – « Signalements des habitants » (novembre 2026)
  * BEGCED – « De la donnée à l'action »
  *
- * Les habitants signalent une inondation ou une ravine, avec une photo, à l'endroit
- * exact. La carte montre tout de suite le point (type, date) ; le texte et la photo
+ * Les habitants signalent, avec une photo, à l'endroit exact :
+ *  - les dangers : inondation, érosion / ravine ;
+ *  - la voirie et l'assainissement : caniveau bouché, caniveau qui déborde,
+ *    caniveau endommagé, route dégradée ;
+ *  - les déchets : poubelle publique pleine (non vidée), dépôt sauvage.
+ * Les problèmes de voirie et de déchets restent sur la carte tant qu'ils ne sont
+ * pas marqués « résolus » (champ « resolu »), avec le nombre de jours d'attente :
+ * c'est ce qui montre si les services de vidage et d'entretien font leur travail.
+ * La carte montre tout de suite le point (type, date) La carte montre tout de suite le point (type, date) ; le texte et la photo
  * n'apparaissent qu'après vérification par BEGCED (champ « valide » dans la base).
  * Aucun nom ni numéro de téléphone n'est demandé.
  *
@@ -17,8 +24,29 @@
   var CLE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6bmZkY3B3a2dqbWRjZnFibGtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3NDUzNjEsImV4cCI6MjEwOTMyMTM2MX0.tm40vfqXKs-RdyFIlu8Zoyn0WTDUsHDotJJ2vFjOEnY";
   var ENTETES = { apikey: CLE_ANON, Authorization: "Bearer " + CLE_ANON };
   var BOITE = { latMin: -4.75, latMax: -4.25, lonMin: 15.05, lonMax: 15.55 };
-  var TYPES = { inondation: "Inondation", erosion: "Érosion / ravine", autre: "Autre danger" };
-  var COULEURS = { inondation: "#1565c0", erosion: "#8d4e1a", autre: "#6a1b9a" };
+  var GROUPES = [
+    { nom: "Danger", types: { inondation: "Inondation", erosion: "Érosion / ravine" } },
+    { nom: "Caniveaux et routes", types: {
+      caniveau_bouche: "Caniveau bouché (déchets, boue)",
+      caniveau_deborde: "Caniveau qui déborde (eau dans la rue)",
+      caniveau_endommage: "Caniveau cassé ou effondré",
+      route_degradee: "Route dégradée (trous, ravine, affaissement)" } },
+    { nom: "Déchets", types: {
+      poubelle_pleine: "Poubelle publique pleine, non vidée",
+      depot_sauvage: "Dépôt sauvage de déchets" } },
+    { nom: "Autre", types: { autre: "Autre problème" } }
+  ];
+  var TYPES = {};
+  GROUPES.forEach(function (g) { Object.keys(g.types).forEach(function (k) { TYPES[k] = g.types[k]; }); });
+  var COULEURS = {
+    inondation: "#1565c0", erosion: "#8d4e1a", autre: "#6a1b9a",
+    caniveau_bouche: "#e65100", caniveau_deborde: "#00838f", caniveau_endommage: "#c62828",
+    route_degradee: "#455a64", poubelle_pleine: "#2e7d32", depot_sauvage: "#827717"
+  };
+  // Problèmes qui restent affichés jusqu'à leur résolution
+  var SUIVIS = ["caniveau_bouche", "caniveau_deborde", "caniveau_endommage", "route_degradee", "poubelle_pleine", "depot_sauvage"];
+  var derniereListe = [];
+  function joursDepuis(iso) { return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)); }
 
   var carte = null, couche = null, choixPosition = null, marqueurChoix = null;
 
@@ -62,8 +90,17 @@
       method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, ENTETES), body: "{}"
     }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (liste) {
       couche.clearLayers();
+      derniereListe = liste;
       liste.forEach(function (s) {
-        var html = "<strong>" + esc(TYPES[s.type] || s.type) + "</strong><br><small>" + esc(dateKin(s.cree_le)) + "</small>";
+        var suivi = SUIVIS.indexOf(s.type) >= 0;
+        var html = "<strong>" + esc(TYPES[s.type] || s.type) + "</strong><br><small>Signalé le " + esc(dateKin(s.cree_le)) + "</small>";
+        if (s.resolu) {
+          html += "<br><strong style='color:#1b8a3a'>✔ Résolu" + (s.resolu_le ? " le " + esc(dateKin(s.resolu_le)) : "") + "</strong>";
+        } else if (suivi) {
+          var j = joursDepuis(s.cree_le);
+          html += "<br><strong style='color:" + (j >= 7 ? "#b3261e" : j >= 3 ? "#9a5b00" : "#0A2A66") + "'>" +
+            (j === 0 ? "Signalé aujourd'hui, pas encore traité" : "Non traité depuis " + j + " jour" + (j > 1 ? "s" : "")) + "</strong>";
+        }
         if (s.valide) {
           if (s.quartier) html += "<br>" + esc(s.quartier);
           if (s.description) html += "<br>" + esc(s.description);
@@ -75,11 +112,41 @@
           html += "<br><small>En attente de vérification par BEGCED</small>";
         }
         L.circleMarker([Number(s.lat), Number(s.lon)], {
-          radius: 8, color: "#fff", weight: 2, fillColor: COULEURS[s.type] || "#1565c0",
-          fillOpacity: s.valide ? 0.95 : 0.55
+          radius: 8, color: s.resolu ? "#1b8a3a" : "#fff", weight: s.resolu ? 3 : 2,
+          fillColor: s.resolu ? "#ffffff" : (COULEURS[s.type] || "#1565c0"),
+          fillOpacity: s.resolu ? 0.8 : (s.valide ? 0.95 : 0.55)
         }).bindPopup(html).addTo(couche);
       });
-    }).catch(function () { /* service indisponible : la carte reste utilisable */ });
+      bilan();
+    }).catch(function () {
+      /* service indisponible : la carte reste utilisable */
+      var zone = document.getElementById("ur-voirie");
+      if (zone && !derniereListe.length) zone.innerHTML = "<p class='note'>Signalements momentanément indisponibles (réseau). Réessayez plus tard.</p>";
+    });
+  }
+
+  // Tableau « État des caniveaux, routes et poubelles » sous la carte (id="ur-voirie")
+  function bilan() {
+    var zone = document.getElementById("ur-voirie");
+    if (!zone) return;
+    var lignes = [
+      ["caniveau_bouche", "Caniveaux bouchés"], ["caniveau_deborde", "Caniveaux qui débordent"],
+      ["caniveau_endommage", "Caniveaux endommagés"], ["route_degradee", "Routes dégradées"],
+      ["poubelle_pleine", "Poubelles pleines non vidées"], ["depot_sauvage", "Dépôts sauvages"]
+    ];
+    var html = "<table class='ur-tab'><thead><tr><th>Problème</th><th>En attente</th><th>Dont depuis 7 jours ou plus</th><th>Résolus (14 derniers jours)</th></tr></thead><tbody>";
+    var total = 0;
+    lignes.forEach(function (l) {
+      var ouverts = derniereListe.filter(function (s) { return s.type === l[0] && !s.resolu; });
+      var vieux = ouverts.filter(function (s) { return joursDepuis(s.cree_le) >= 7; }).length;
+      var resolus = derniereListe.filter(function (s) { return s.type === l[0] && s.resolu; }).length;
+      total += ouverts.length + resolus;
+      html += "<tr><td><span class='ur-pt' style='background:" + COULEURS[l[0]] + "'></span>" + l[1] + "</td><td>" + ouverts.length +
+        "</td><td" + (vieux ? " style='color:#b3261e;font-weight:700'" : "") + ">" + vieux + "</td><td>" + resolus + "</td></tr>";
+    });
+    html += "</tbody></table>";
+    if (!total) html += "<p class='note'>Aucun signalement pour l'instant. Soyez le premier : touchez « Signaler un problème » sur la carte.</p>";
+    zone.innerHTML = html;
   }
 
   function envoyer(donnees, photo) {
@@ -106,21 +173,25 @@
     var f = document.createElement("div");
     f.className = "ur-sig";
     f.setAttribute("role", "dialog");
-    f.setAttribute("aria-label", "Signaler une inondation");
+    f.setAttribute("aria-label", "Signaler un problème");
     f.style.cssText = "position:fixed;inset:auto 12px 12px 12px;max-width:420px;margin:auto;z-index:2000;background:#fff;color:#0A2A66;" +
       "border-radius:12px;box-shadow:0 6px 30px rgba(0,0,0,.35);padding:14px 16px;font:14px/1.45 system-ui,sans-serif;max-height:85vh;overflow:auto";
     f.innerHTML =
-      "<div style='display:flex;justify-content:space-between;align-items:center'><strong style='font-size:16px'>Signaler une inondation</strong>" +
+      "<div style='display:flex;justify-content:space-between;align-items:center'><strong style='font-size:16px'>Signaler un problème</strong>" +
       "<button type='button' class='ur-x' aria-label='Fermer' style='border:0;background:none;font-size:22px;cursor:pointer'>×</button></div>" +
       "<form>" +
       "<label style='display:block;margin-top:8px'>Ce que je vois<br><select name='type' required style='width:100%'>" +
-      Object.keys(TYPES).map(function (k) { return "<option value='" + k + "'>" + TYPES[k] + "</option>"; }).join("") + "</select></label>" +
+      GROUPES.map(function (g) {
+        return "<optgroup label='" + g.nom + "'>" + Object.keys(g.types).map(function (k) {
+          return "<option value='" + k + "'>" + g.types[k] + "</option>";
+        }).join("") + "</optgroup>";
+      }).join("") + "</select></label>" +
       "<div style='margin-top:8px'>Endroit : <span class='ur-pos'>pas encore choisi</span><br>" +
       "<button type='button' class='btn ur-gps' style='margin-top:4px'>📍 Ma position</button> " +
       "<button type='button' class='btn ur-clic' style='margin-top:4px'>Toucher la carte</button></div>" +
       "<label style='display:block;margin-top:8px'>Quartier / avenue (facultatif)<br><input name='quartier' maxlength='80' style='width:100%'></label>" +
-      "<label style='display:block;margin-top:8px'>Description (facultatif)<br><textarea name='description' maxlength='500' rows='2' style='width:100%' placeholder='Eau dans la rue, maison touchée, ravine qui avance…'></textarea></label>" +
-      "<label style='display:block;margin-top:8px'>Photo (facultatif, de l'eau ou de la ravine, pas des personnes)<br><input name='photo' type='file' accept='image/*' capture='environment'></label>" +
+      "<label style='display:block;margin-top:8px'>Description (facultatif)<br><textarea name='description' maxlength='500' rows='2' style='width:100%' placeholder='Eau dans la rue, caniveau rempli de boue et de plastiques, poubelle pleine depuis une semaine, trou sur la route…'></textarea></label>" +
+      "<label style='display:block;margin-top:8px'>Photo (facultatif : le problème, pas des personnes)<br><input name='photo' type='file' accept='image/*' capture='environment'></label>" +
       "<button type='submit' class='btn' style='margin-top:10px;width:100%;background:#1565c0;color:#fff'>Envoyer le signalement</button>" +
       "<p class='ur-etat' style='margin:8px 0 0;font-size:13px'></p>" +
       "<p style='margin:6px 0 0;font-size:12px;opacity:.75'>Aucun nom ni numéro demandé. Le point apparaît tout de suite sur la carte ; " +
@@ -186,7 +257,9 @@
   window.UrbanRiskSignalements = {
     ouvrir: function () { if (installer()) formulaire(); },
     couche: function () { return couche; },
-    choixEnCours: function () { return !!choixPosition; }
+    choixEnCours: function () { return !!choixPosition; },
+    types: function () { return TYPES; },
+    couleurs: function () { return COULEURS; }
   };
   function auto() { if (!installer()) setTimeout(installer, 1500); }
   if (document.readyState === "complete") auto(); else window.addEventListener("load", auto);

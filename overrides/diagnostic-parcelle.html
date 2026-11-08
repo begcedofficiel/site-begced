@@ -141,6 +141,11 @@ footer{padding:18px 0 28px;font-size:13px;color:var(--muted);border-top:1px soli
 .tag{position:absolute;top:12px;padding:4px 10px;border-radius:8px;background:rgba(10,18,32,.82);color:#fff;font-size:13px;font-weight:700;max-width:42%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:760px){.tag{top:60px;font-size:12px}}
 @media print{.bar,.layers,.toast{display:none}}
+.ur-tab{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+.ur-tab th,.ur-tab td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+.ur-tab th{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+.ur-tab td:not(:first-child),.ur-tab th:not(:first-child){text-align:center}
+.ur-pt{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -193,6 +198,14 @@ footer{padding:18px 0 28px;font-size:13px;color:var(--muted);border-top:1px soli
         <div class="lg"><span class="sw" style="background:#f5a03a"></span>Bassin en vigilance orange</div>
         <div class="lg"><span class="sw" style="background:#e5483b"></span>Bassin en vigilance rouge</div>
         <div class="lg"><span class="sw" style="background:#1565c0;border-radius:50%"></span>Inondation signalée par un habitant (pâle : en attente de vérification)</div>
+        <div class="lg"><span class="sw" style="background:#8d4e1a;border-radius:50%"></span>Érosion / ravine</div>
+        <div class="lg"><span class="sw" style="background:#e65100;border-radius:50%"></span>Caniveau bouché</div>
+        <div class="lg"><span class="sw" style="background:#00838f;border-radius:50%"></span>Caniveau qui déborde</div>
+        <div class="lg"><span class="sw" style="background:#c62828;border-radius:50%"></span>Caniveau endommagé</div>
+        <div class="lg"><span class="sw" style="background:#455a64;border-radius:50%"></span>Route dégradée</div>
+        <div class="lg"><span class="sw" style="background:#2e7d32;border-radius:50%"></span>Poubelle pleine non vidée</div>
+        <div class="lg"><span class="sw" style="background:#827717;border-radius:50%"></span>Dépôt sauvage de déchets</div>
+        <div class="lg"><span class="sw" style="background:#fff;border:3px solid #1b8a3a;border-radius:50%"></span>Problème résolu</div>
         <p class="note">Niveaux expérimentaux, non officiels. Touchez la carte pour la fiche d'un lieu.</p>
       </div>
     </details>
@@ -219,6 +232,19 @@ footer{padding:18px 0 28px;font-size:13px;color:var(--muted);border-top:1px soli
       <iframe src="https://moonlit-poetry-457514-m8.projects.earthengine.app/view/urbanrisk-montngafula" title="UrbanRisk Mont-Ngafula – suivi satellite des inondations et de l'érosion (Google Earth Engine)" loading="lazy" allow="geolocation; fullscreen"></iframe>
     </div>
     <p class="note"><a href="https://moonlit-poetry-457514-m8.projects.earthengine.app/view/urbanrisk-montngafula" target="_blank" rel="noopener">Ouvrir le suivi satellite en plein écran</a> (recommandé sur téléphone). Le calcul prend 10 à 30 secondes. Détection automatique, à confirmer sur le terrain : ce n'est pas une alerte officielle. Les satellites ne passent pas en continu : la date de l'image utilisée est toujours affichée.</p>
+  </section>
+
+  <section class="info" id="voirie" aria-labelledby="h-voirie">
+    <h2 id="h-voirie">Caniveaux, routes et déchets : ce qui cause les inondations</h2>
+    <p>À Kinshasa, beaucoup d'inondations ne viennent pas seulement de la pluie : l'eau déborde parce que <b>les caniveaux sont bouchés</b> par les déchets et la boue, ou <b>cassés</b>. Des poubelles publiques sont installées, mais quand elles ne sont pas vidées, les déchets finissent dans les caniveaux. Les routes dégradées aggravent le ruissellement et l'érosion.</p>
+    <ul class="pts">
+      <li><b>Signalez</b> avec le bouton « Signaler un problème » sur la carte : caniveau bouché, caniveau qui déborde, caniveau endommagé, route dégradée, poubelle pleine non vidée, dépôt sauvage. Une photo suffit, sans nom ni numéro.</li>
+      <li><b>Chaque problème reste sur la carte jusqu'à ce qu'il soit réglé</b>, avec le nombre de jours d'attente. Quand le caniveau est curé, la poubelle vidée ou la route réparée, BEGCED le marque « résolu » après vérification.</li>
+      <li><b>Pour les autorités et les services de collecte :</b> le tableau ci-dessous montre ce qui attend et depuis combien de temps. Il aide à cibler le curage des caniveaux avant les pluies et à vérifier que le vidage est réellement fait.</li>
+    </ul>
+    <h3 style="margin-top:14px">État actuel des signalements</h3>
+    <div id="ur-voirie"><p class="note">Lecture des signalements…</p></div>
+    <p class="note">Signalements des habitants, vérifiés par BEGCED avant publication du texte et de la photo. Les déchets ramassés dans les caniveaux sont souvent mêlés de boue : leur tri (végétaux, plastiques, boue) relève des services d'assainissement et des structures de valorisation, avec qui BEGCED partage ces données.</p>
   </section>
 
   <section class="info" aria-labelledby="h-prev">
@@ -253,7 +279,7 @@ footer{padding:18px 0 28px;font-size:13px;color:var(--muted);border-top:1px soli
     </details>
   </section>
 
-  <footer>© 2026 BEGCED · UrbanRisk est un projet de BEGCED, « De la donnée à l'action ». Information publique et gratuite, à titre indicatif : ni alerte officielle, ni titre ou certificat foncier, ni carte réglementaire. Contact : <a href="/contact">begced.com/contact</a>.</footer>
+  <footer>© 2026 BEGCED · UrbanRisk est un projet de BEGCED, « De la donnée à l'action ». Inondations, érosion, caniveaux, routes et déchets. Information publique et gratuite, à titre indicatif : ni alerte officielle, ni titre ou certificat foncier, ni carte réglementaire. Contact : <a href="/contact">begced.com/contact</a>.</footer>
 </div>
 <div class="toast" id="toast" hidden></div>
 
