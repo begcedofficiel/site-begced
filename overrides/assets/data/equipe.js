@@ -17,8 +17,7 @@ window.BEGCED_EQUIPE = {
       nom: "Innocent KANDA",
       photo: "assets/img/equipe/innocent-kanda.jpg",
       postes: [
-        { fonction: "Directeur général", departement: "Direction générale", responsabilites: "Orientation stratégique, supervision globale et représentation." },
-        { fonction: "Responsable du département Géomatique", departement: "Géomatique", responsabilites: "SIG, télédétection, cartographie et topographie." }
+        { fonction: "Directeur général", departement: "Direction générale", responsabilites: "Orientation stratégique, supervision globale et représentation." }
       ],
       bio: ""
     },
@@ -59,29 +58,11 @@ window.BEGCED_EQUIPE = {
       bio: ""
     },
     {
-      id: "melanie-khiendo",
-      nom: "Mélanie KHIENDO",
-      photo: "assets/img/equipe/melanie-khiendo.jpg",
-      postes: [
-        { fonction: "Responsable Finances et comptabilité", departement: "Finances et comptabilité", responsabilites: "Budget, trésorerie et comptabilité." }
-      ],
-      bio: ""
-    },
-    {
-      id: "isaac-sango",
-      nom: "Isaac SANGO",
-      photo: "assets/img/equipe/isaac-sango.jpg",
-      postes: [
-        { fonction: "Responsable Informatique (IT)", departement: "Informatique (IT)", responsabilites: "Systèmes d’information, réseaux et sécurité." }
-      ],
-      bio: ""
-    },
-    {
       id: "obed-zamba",
       nom: "Obed ZAMBA",
       photo: "assets/img/equipe/obed-zamba.jpg",
       postes: [
-        { fonction: "Ingénieur BTP", departement: "Génie civil", responsabilites: "Bâtiment et travaux publics : études, exécution et suivi de chantiers." }
+        { fonction: "Responsable du département Géomatique", departement: "Géomatique", responsabilites: "SIG, télédétection, cartographie et topographie." }
       ],
       bio: ""
     },
@@ -99,7 +80,7 @@ window.BEGCED_EQUIPE = {
       nom: "Tims ASENI MALAMU",
       photo: "assets/img/equipe/tims-aseni-malamu.jpg",
       postes: [
-        { fonction: "Ingénieur", departement: "Équipe d’ingénieurs", responsabilites: "Études techniques et missions de terrain." }
+        { fonction: "Responsable du département Recherche et formation", departement: "Recherche et formation", responsabilites: "Projets de recherche appliquée, formations et encadrement des stagiaires." }
       ],
       bio: ""
     }
@@ -113,21 +94,19 @@ window.BEGCED_EQUIPE = {
       { departement: "Direction administrative et financière", membre: "moise-bamolona", niveau: 2 }
     ],
     techniques: [
-      { departement: "Géomatique", membre: "innocent-kanda" },
+      { departement: "Géomatique", membre: "obed-zamba" },
       { departement: "Génie civil", membre: "eliezer-kanda" },
       { departement: "Environnement", membre: "" },
-      { departement: "Recherche et formation", membre: "" }
+      { departement: "Développement numérique", membre: "" },
+      { departement: "Recherche et formation", membre: "tims-aseni-malamu" }
     ],
     support: [
       { departement: "Ressources humaines et logistique", membre: "victoire-manzuku" },
       { departement: "Affaires juridiques", membre: "" },
-      { departement: "Finances et comptabilité", membre: "melanie-khiendo" },
-      { departement: "Informatique (IT)", membre: "isaac-sango" }
+      { departement: "Finances et comptabilité", membre: "" }
     ],
     ingenieurs: [
-      { departement: "Ingénieur BTP", membre: "obed-zamba" },
-      { departement: "Ingénieur", membre: "jacques" },
-      { departement: "Ingénieur", membre: "tims-aseni-malamu" }
+      { departement: "Ingénieur", membre: "jacques" }
     ]
   }
 };
