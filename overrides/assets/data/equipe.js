@@ -102,7 +102,6 @@ window.BEGCED_EQUIPE = {
     ],
     support: [
       { departement: "Ressources humaines et logistique", membre: "victoire-manzuku" },
-      { departement: "Affaires juridiques", membre: "" },
       { departement: "Finances et comptabilité", membre: "" }
     ],
     ingenieurs: [
